@@ -1,0 +1,36 @@
+// protoc --go_out=plugins=grpc:. *.proto
+
+syntax = "proto3";
+
+package user;
+
+option go_package = "yijunqiang/gf-micro/user/api/user/v1";
+
+import "pbentity/user.proto";
+
+service User{
+  rpc Create(CreateReq) returns (CreateRes) {}
+  rpc Login(LoginReq) returns (LoginRes) {}
+  rpc GetOne(GetOneReq) returns (GetOneRes) {}
+}
+
+message CreateReq {
+  string Nickname = 1; // v: required
+  string Password = 2; // v: required
+}
+message CreateRes {}
+
+message LoginReq {
+  string Nickname = 1; // v: required
+  string Password = 2; // v: required
+}
+message LoginRes {
+  string Token = 1;
+}
+
+message GetOneReq {
+  uint64 Id = 1; // v: required
+}
+message GetOneRes {
+  pbentity.User User = 1;
+}
