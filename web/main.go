@@ -1,11 +1,11 @@
 package main
 
 import (
-	_ "svc1/internal/packed"
+	_ "web/internal/packed"
 
 	"github.com/gogf/gf/v2/os/gctx"
 
-	"svc1/internal/cmd"
+	"web/internal/cmd"
 )
 
 func main() {

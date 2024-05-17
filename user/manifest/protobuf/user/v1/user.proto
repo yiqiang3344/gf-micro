@@ -29,7 +29,7 @@ message LoginRes {
 }
 
 message GetOneReq {
-  uint64 Id = 1; // v: required
+  string Id = 1; // v: required
 }
 message GetOneRes {
   pbentity.User User = 1;

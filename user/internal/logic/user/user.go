@@ -2,6 +2,8 @@ package user
 
 import (
 	"context"
+	"github.com/gogf/gf/v2/errors/gcode"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"yijunqiang/gf-micro/user/internal/model/entity"
 
 	"yijunqiang/gf-micro/user/api/pbentity"
@@ -37,13 +39,14 @@ func (s *sUser) Login(ctx context.Context, nickname string, password string) (to
 		return
 	}
 	if user == nil {
+		err = gerror.NewCode(gcode.New(-1, "账号或密码错误", nil))
 		return
 	}
 	token = user.Nickname
 	return
 }
 
-func (s *sUser) GetById(ctx context.Context, uid uint64) (*pbentity.User, error) {
+func (s *sUser) GetById(ctx context.Context, uid string) (*pbentity.User, error) {
 	var user *pbentity.User
 	err := dao.User.Ctx(ctx).Where(do.User{
 		Id: uid,

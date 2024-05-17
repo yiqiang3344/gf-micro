@@ -15,7 +15,7 @@ type (
 	IUser interface {
 		Create(ctx context.Context, nickname string, password string) (*entity.User, error)
 		Login(ctx context.Context, nickname string, password string) (token string, err error)
-		GetById(ctx context.Context, uid uint64) (*pbentity.User, error)
+		GetById(ctx context.Context, uid string) (*pbentity.User, error)
 	}
 )
 

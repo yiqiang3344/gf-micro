@@ -4,7 +4,7 @@ server:
   swaggerPath: "/swagger"
 
 logger:
-  level : "all"
+  level : "info"
   stdout: true
 
 
