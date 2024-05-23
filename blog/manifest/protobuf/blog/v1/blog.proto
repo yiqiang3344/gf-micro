@@ -26,9 +26,10 @@ message CreateReq {
 message CreateRes {}
 
 message EditReq {
-  string Title = 1; // v: required
-  string Content = 2; // v: required
-  string Nickname = 3; // v: required
+  uint64 Id = 1; // v: required
+  string Title = 2; // v: required
+  string Content = 3; // v: required
+  string Nickname = 4; // v: required
 }
 message EditRes {
 }

@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"context"
-	controller "web/internal/controller/user"
+	"web/internal/controller"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
@@ -20,6 +20,7 @@ var (
 				group.Middleware(ghttp.MiddlewareHandlerResponse)
 				group.Bind(
 					controller.User,
+					controller.Blog,
 				)
 			})
 			s.Run()

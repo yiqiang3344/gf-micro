@@ -23,7 +23,7 @@ func (*Controller) Create(ctx context.Context, req *v1.CreateReq) (res *v1.Creat
 
 func (*Controller) Edit(ctx context.Context, req *v1.EditReq) (res *v1.EditRes, err error) {
 	res = &v1.EditRes{}
-	service.Blog().Edit(ctx, req.Title, req.Content, req.Nickname)
+	service.Blog().Edit(ctx, req.Id, req.Title, req.Content, req.Nickname)
 	return
 }
 

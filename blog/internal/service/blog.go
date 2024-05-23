@@ -14,7 +14,7 @@ import (
 type (
 	IBlog interface {
 		Create(ctx context.Context, title string, content string, nickname string) (*entity.Blog, error)
-		Edit(ctx context.Context, title string, content string, nickname string) (err error)
+		Edit(ctx context.Context, id uint64, title string, content string, nickname string) (err error)
 		GetById(ctx context.Context, id uint64) (*pbentity.Blog, error)
 		GetList(ctx context.Context) (list []*pbentity.Blog, err error)
 		Delete(ctx context.Context, id uint64) (err error)

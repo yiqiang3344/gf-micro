@@ -2,6 +2,7 @@ package blog
 
 import (
 	"context"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"yijunqiang/gf-micro/blog/internal/model/entity"
 
 	"yijunqiang/gf-micro/blog/api/pbentity"
@@ -28,9 +29,21 @@ func (s *sBlog) Create(ctx context.Context, title string, content string, nickna
 	return blog, err
 }
 
-func (s *sBlog) Edit(ctx context.Context, title string, content string, nickname string) (err error) {
+func (s *sBlog) Edit(ctx context.Context, id uint64, title string, content string, nickname string) (err error) {
+	blog, err := s.GetById(ctx, id)
+	if err != nil {
+		return
+	}
+	if blog == nil {
+		err = gerror.New("博客不存在")
+		return
+	}
+	if blog.Nickname != nickname {
+		err = gerror.New("只能编辑自己的博客")
+		return
+	}
 	_, err = dao.Blog.Ctx(ctx).Where(do.Blog{
-		Nickname: nickname,
+		Id: id,
 	}).Data(do.Blog{
 		Title:   title,
 		Content: content,
@@ -59,6 +72,14 @@ func (s *sBlog) GetList(ctx context.Context) (list []*pbentity.Blog, err error) 
 }
 
 func (s *sBlog) Delete(ctx context.Context, id uint64) (err error) {
+	blog, err := s.GetById(ctx, id)
+	if err != nil {
+		return
+	}
+	if blog == nil {
+		err = gerror.New("博客不存在")
+		return
+	}
 	_, err = dao.Blog.Ctx(ctx).Where(do.Blog{
 		Id: id,
 	}).Delete()
@@ -73,11 +94,20 @@ func (s *sBlog) BatDelete(ctx context.Context, ids []uint64) (batNo string, err 
 	if err != nil {
 		return
 	}
-	batNo = "bat12345"
+	batNo = "bat1"
 	return
 }
 
 func (s *sBlog) GetBatDeleteStatus(ctx context.Context, batNo string) (status string, err error) {
-	status = "pending"
+	status = ""
+	switch batNo {
+	case "bat1":
+		status = "success"
+	case "bat2":
+		status = "pending"
+	default:
+		err = gerror.New("batNo不存在")
+		return
+	}
 	return
 }
