@@ -7,5 +7,8 @@ logger:
   level : "info"
   stdout: true
 
-
+# 链路追踪
+otlp:
+  endpoint: "ip:port"
+  traceToken: "token"
 

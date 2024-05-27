@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"context"
+	"github.com/gogf/gf/contrib/trace/otlpgrpc/v2"
+	"github.com/gogf/gf/v2/os/gcfg"
 	"web/internal/controller"
 
 	"github.com/gogf/gf/v2/frame/g"
@@ -15,6 +17,17 @@ var (
 		Usage: "main",
 		Brief: "start http server",
 		Func: func(ctx context.Context, parser *gcmd.Parser) (err error) {
+			// 链路追踪初始化
+			shutdown, err := otlpgrpc.Init(
+				gcfg.Instance().MustGet(ctx, "appName").String(),
+				gcfg.Instance().MustGet(ctx, "otlp.endpoint").String(),
+				gcfg.Instance().MustGet(ctx, "otlp.traceToken").String(),
+			)
+			if err != nil {
+				g.Log().Fatal(ctx, err)
+			}
+			defer shutdown()
+
 			s := g.Server()
 			s.Group("/", func(group *ghttp.RouterGroup) {
 				group.Middleware(ghttp.MiddlewareHandlerResponse)

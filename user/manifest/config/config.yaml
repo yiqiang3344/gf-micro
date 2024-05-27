@@ -25,3 +25,7 @@ database:
     link: "mysql:root:12345678@tcp(127.0.0.1:3306)/gf_micro_user"
     debug: true
 
+# 链路追踪
+otlp:
+  endpoint: "ip:port"
+  traceToken: "token"

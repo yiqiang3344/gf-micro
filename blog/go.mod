@@ -6,9 +6,10 @@ require (
 	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.4.0
 	github.com/gogf/gf/contrib/rpc/grpcx/v2 v2.7.1
+	github.com/gogf/gf/contrib/trace/otlpgrpc/v2 v2.7.1
 	github.com/gogf/gf/v2 v2.7.1
-	google.golang.org/grpc v1.57.2
-	google.golang.org/protobuf v1.31.0
+	google.golang.org/grpc v1.60.1
+	google.golang.org/protobuf v1.32.0
 )
 
 replace yijunqiang/gf-micro/blog => ../blog
