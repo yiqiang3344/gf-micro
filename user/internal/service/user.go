@@ -13,7 +13,7 @@ import (
 
 type (
 	IUser interface {
-		Create(ctx context.Context, nickname string, password string) (*entity.User, error)
+		Create(ctx context.Context, nickname string, password string) (user *entity.User, err error)
 		Login(ctx context.Context, nickname string, password string) (token string, err error)
 		GetById(ctx context.Context, uid string) (*pbentity.User, error)
 	}

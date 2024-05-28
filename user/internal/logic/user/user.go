@@ -20,13 +20,16 @@ func init() {
 	service.RegisterUser(&sUser{})
 }
 
-func (s *sUser) Create(ctx context.Context, nickname string, password string) (*entity.User, error) {
-	user := &entity.User{
+func (s *sUser) Create(ctx context.Context, nickname string, password string) (user *entity.User, err error) {
+	user = &entity.User{
 		Nickname: nickname,
 		Password: password,
 	}
-	_, err := dao.User.Ctx(ctx).Data(user).Insert()
-	return user, err
+	_, err = dao.User.Ctx(ctx).Data(user).Insert()
+	if err != nil {
+		return
+	}
+	return
 }
 
 func (s *sUser) Login(ctx context.Context, nickname string, password string) (token string, err error) {

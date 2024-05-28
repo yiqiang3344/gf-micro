@@ -9,6 +9,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 	"strings"
 	v1 "web/api/blog/v1"
+	"web/internal/logging"
 	"web/internal/model"
 	blogMicroV1 "yijunqiang/gf-micro/blog/api/blog/v1"
 )
@@ -28,9 +29,16 @@ func (c *cBlog) BlogCreate(ctx context.Context, req *v1.BlogCreateReq) (res *v1.
 		Content:  req.Content,
 	})
 	if err != nil {
-		g.Log().Error(ctx, err)
+		logging.BizLog{
+			Tag:     "BlogCreate",
+			Message: "failed",
+		}.Log(ctx)
 		return
 	}
+	logging.BizLog{
+		Tag:     "BlogCreate",
+		Message: "success",
+	}.Log(ctx)
 	return
 }
 
@@ -60,7 +68,7 @@ func (c *cBlog) BlogDetail(ctx context.Context, req *v1.BlogDetailReq) (res *v1.
 		return
 	}
 	if ret.Blog == nil {
-		err = gerror.NewCode(gcode.New(-1, "博客不存在", nil))
+		err = gerror.NewCode(gcode.CodeBusinessValidationFailed, "博客不存在")
 		return
 	}
 	res.BlogDetailOutput = &model.BlogDetailOutput{
@@ -95,8 +103,16 @@ func (c *cBlog) BlogDelete(ctx context.Context, req *v1.BlogDeleteReq) (res *v1.
 		Id: gconv.Uint64(req.Id),
 	})
 	if err != nil {
+		logging.BizLog{
+			Tag:     "BlogDelete",
+			Message: "failed",
+		}.Log(ctx)
 		return
 	}
+	logging.BizLog{
+		Tag:     "BlogDelete",
+		Message: "success",
+	}.Log(ctx)
 	return
 }
 
@@ -113,6 +129,10 @@ func (c *cBlog) BlogBatDelete(ctx context.Context, req *v1.BlogBatDeleteReq) (re
 		return
 	}
 	res.BatNo = ret.BatNo
+	logging.BizLog{
+		Tag:     "BlogBatDelete",
+		Message: "success",
+	}.Log(ctx)
 	return
 }
 

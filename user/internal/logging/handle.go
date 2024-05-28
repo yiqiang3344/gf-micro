@@ -1,15 +1,11 @@
-package middleware
+package logging
 
 import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"strings"
-	"web/internal/logging"
-
 	"github.com/gogf/gf/v2/os/glog"
-
-	"github.com/gogf/gf/v2/net/ghttp"
+	"strings"
 )
 
 type HandlerOutputJson struct {
@@ -28,9 +24,9 @@ type HandlerOutputJson struct {
 var (
 	// logCategoryMap 是否转换为json格式的配置map
 	logCategoryMap = map[string]interface{}{
-		"access": new(logging.AccessLog),
-		"error":  new(logging.ErrorLog),
-		"biz":    new(logging.BizLog),
+		"access": 1,
+		"error":  1,
+		"biz":    1,
 	}
 )
 
@@ -61,10 +57,4 @@ func HandlerJson(ctx context.Context, in *glog.HandlerInput) {
 		in.Buffer.Write(bf.Bytes())
 	}
 	in.Next(ctx)
-}
-
-func MiddlewareHandlerJson(r *ghttp.Request) {
-	glog.SetDefaultHandler(HandlerJson)
-
-	r.Middleware.Next()
 }
