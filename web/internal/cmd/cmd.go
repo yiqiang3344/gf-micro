@@ -5,6 +5,7 @@ import (
 	"github.com/gogf/gf/contrib/trace/otlpgrpc/v2"
 	"github.com/gogf/gf/v2/os/gcfg"
 	"web/internal/controller"
+	"web/internal/middleware"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
@@ -29,8 +30,16 @@ var (
 			defer shutdown()
 
 			s := g.Server()
+			s.Use(
+				middleware.MiddlewareHandlerJson,
+				middleware.MiddlewareHandlerAccessLog,
+				middleware.MiddlewareHandlerErrorLog,
+				middleware.MiddlewareHandlerResponse,
+			)
 			s.Group("/", func(group *ghttp.RouterGroup) {
-				group.Middleware(ghttp.MiddlewareHandlerResponse)
+				group.Middleware(
+					middleware.MiddlewareAuth,
+				)
 				group.Bind(
 					controller.User,
 					controller.Blog,

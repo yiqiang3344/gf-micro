@@ -39,7 +39,7 @@ func (s *sUser) Login(ctx context.Context, nickname string, password string) (to
 		return
 	}
 	if user == nil {
-		err = gerror.NewCode(gcode.New(-1, "账号或密码错误", nil))
+		err = gerror.NewCode(gcode.CodeBusinessValidationFailed, "账号或密码错误")
 		return
 	}
 	token = user.Nickname

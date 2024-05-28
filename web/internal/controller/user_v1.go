@@ -5,8 +5,8 @@ import (
 	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/frame/g"
 	v1 "web/api/user/v1"
+	"web/internal/logging"
 	"web/internal/model"
 	userMicroV1 "yijunqiang/gf-micro/user/api/user/v1"
 )
@@ -23,9 +23,16 @@ func (c *cUser) UserCreate(ctx context.Context, req *v1.UserCreateReq) (res *v1.
 		Password: req.Password,
 	})
 	if err != nil {
-		g.Log().Error(ctx, err)
+		logging.BizLog{
+			Tag:     "UserCreate",
+			Message: "failed",
+		}.Log(ctx)
 		return
 	}
+	logging.BizLog{
+		Tag:     "UserCreate",
+		Message: "success",
+	}.Log(ctx)
 	return
 }
 
@@ -36,10 +43,17 @@ func (c *cUser) UserLogin(ctx context.Context, req *v1.UserLoginReq) (res *v1.Us
 		Password: req.Password,
 	})
 	if err != nil {
-		g.Log().Error(ctx, err)
+		logging.BizLog{
+			Tag:     "UserLogin",
+			Message: "failed",
+		}.Log(ctx)
 		return
 	}
 	res.Token = ret.Token
+	logging.BizLog{
+		Tag:     "UserLogin",
+		Message: "success",
+	}.Log(ctx)
 	return
 }
 
@@ -52,7 +66,7 @@ func (c *cUser) UserDetail(ctx context.Context, req *v1.UserDetailReq) (res *v1.
 		return
 	}
 	if ret.User == nil {
-		err = gerror.NewCode(gcode.New(-1, "用户不存在", nil))
+		err = gerror.NewCode(gcode.CodeBusinessValidationFailed, "用户不存在")
 		return
 	}
 	res.UserDetailOutput = &model.UserDetailOutput{
