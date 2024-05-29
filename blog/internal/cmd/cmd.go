@@ -6,6 +6,8 @@ import (
 	"github.com/gogf/gf/contrib/trace/otlpgrpc/v2"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcfg"
+	"github.com/gogf/gf/v2/os/glog"
+	"yijunqiang/gf-micro/blog/internal/logging"
 
 	"github.com/gogf/gf/v2/os/gcmd"
 	"google.golang.org/grpc"
@@ -20,6 +22,9 @@ var (
 		Usage: "main",
 		Brief: "start user micro server",
 		Func: func(ctx context.Context, parser *gcmd.Parser) (err error) {
+			//日志json化
+			glog.SetDefaultHandler(logging.HandlerJson)
+
 			// 链路追踪初始化
 			shutdown, err := otlpgrpc.Init(
 				gcfg.Instance().MustGet(ctx, "appName").String(),
@@ -35,6 +40,7 @@ var (
 			c.Options = append(c.Options, []grpc.ServerOption{
 				grpcx.Server.ChainUnary(
 					grpcx.Server.UnaryValidate,
+					logging.UnaryLogger,
 				)}...,
 			)
 			s := grpcx.Server.New(c)

@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"strings"
-	"web/internal/logging"
-
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v2/text/gstr"
+	"strings"
 
 	"github.com/gogf/gf/v2/net/ghttp"
 )
@@ -25,20 +25,11 @@ type HandlerOutputJson struct {
 	Stack      string `json:"stack,omitempty"`       // Stack string produced by logger, only available if Config.StStatus configured.
 }
 
-var (
-	// logCategoryMap 是否转换为json格式的配置map
-	logCategoryMap = map[string]interface{}{
-		"access": new(logging.AccessLog),
-		"error":  new(logging.ErrorLog),
-		"biz":    new(logging.BizLog),
-	}
-)
-
 func HandlerJson(ctx context.Context, in *glog.HandlerInput) {
 	//根据日志文件判断日志类别
 	logCategory := strings.Split(in.Logger.GetConfig().File, ".")[0]
 	//在配置中的才json做转换
-	if _, ok := logCategoryMap[logCategory]; ok {
+	if gstr.InArray(g.Config().MustGet(ctx, "jsonFormatLogs").Strings(), logCategory) {
 		output := HandlerOutputJson{
 			Time:       in.TimeFormat,
 			TraceId:    in.TraceId,

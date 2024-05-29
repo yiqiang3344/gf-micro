@@ -80,6 +80,8 @@ logger:
     stdoutColorDisabled: false                          # 关闭终端的颜色打印。默认开启
     writerColorEnable: false                            # 日志文件是否带上颜色。默认false，表示不带颜色
 
+jsonFormatLogs: [ "access", "error", "biz" ]  # 需要json格式的日志，日志配置中file中.分割前的部分
+
 # 链路追踪
 otlp:
   endpoint: "tracing-analysis-dc-bj.aliyuncs.com:8090"
