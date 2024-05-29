@@ -2,6 +2,8 @@ module yijunqiang/gf-micro/user
 
 go 1.21
 
+//toolchain go1.22.3
+
 require (
 	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.7.1
 	github.com/gogf/gf/contrib/rpc/grpcx/v2 v2.7.1
