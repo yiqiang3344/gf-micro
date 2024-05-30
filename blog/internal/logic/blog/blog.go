@@ -2,6 +2,7 @@ package blog
 
 import (
 	"context"
+	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"yijunqiang/gf-micro/blog/internal/model/entity"
 
@@ -35,11 +36,11 @@ func (s *sBlog) Edit(ctx context.Context, id uint64, title string, content strin
 		return
 	}
 	if blog == nil {
-		err = gerror.New("博客不存在")
+		err = gerror.NewCode(gcode.CodeBusinessValidationFailed, "博客不存在")
 		return
 	}
 	if blog.Nickname != nickname {
-		err = gerror.New("只能编辑自己的博客")
+		err = gerror.NewCode(gcode.CodeBusinessValidationFailed, "只能编辑自己的博客")
 		return
 	}
 	_, err = dao.Blog.Ctx(ctx).Where(do.Blog{
@@ -77,7 +78,7 @@ func (s *sBlog) Delete(ctx context.Context, id uint64) (err error) {
 		return
 	}
 	if blog == nil {
-		err = gerror.New("博客不存在")
+		err = gerror.NewCode(gcode.CodeBusinessValidationFailed, "博客不存在")
 		return
 	}
 	_, err = dao.Blog.Ctx(ctx).Where(do.Blog{
@@ -106,7 +107,7 @@ func (s *sBlog) GetBatDeleteStatus(ctx context.Context, batNo string) (status st
 	case "bat2":
 		status = "pending"
 	default:
-		err = gerror.New("batNo不存在")
+		err = gerror.NewCode(gcode.CodeBusinessValidationFailed, "batNo不存在")
 		return
 	}
 	return

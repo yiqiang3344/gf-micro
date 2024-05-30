@@ -42,7 +42,7 @@ func Test_GetOne(t *testing.T) {
 			err  error
 		)
 		res, err = user.GetOne(ctx, &v1.GetOneReq{
-			Id: 1,
+			Id: "1",
 		})
 		if err != nil {
 			g.Log().Fatalf(ctx, `get user failed: %+v`, err)
@@ -50,7 +50,7 @@ func Test_GetOne(t *testing.T) {
 		fmt.Printf("test:GetOne success，result: %+v \n", res.User)
 
 		res, err = user.GetOne(ctx, &v1.GetOneReq{
-			Id: 100,
+			Id: "100",
 		})
 		if err != nil {
 			g.Log().Fatalf(ctx, `get user failed: %+v`, err)

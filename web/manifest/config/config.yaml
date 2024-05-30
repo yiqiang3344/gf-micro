@@ -68,3 +68,7 @@ jsonFormatLogs: [ "access", "error", "biz" ]  # 需要json格式的日志，日�
 otlp:
   endpoint: "tracing-analysis-dc-bj.aliyuncs.com:8090"
   traceToken: "*_*"
+
+# 服务注册发现
+registry:
+  etcd: "127.0.0.1:2379"

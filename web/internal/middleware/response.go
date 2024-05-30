@@ -8,7 +8,6 @@ import (
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/i18n/gi18n"
 	"github.com/gogf/gf/v2/net/ghttp"
 )
 
@@ -24,7 +23,7 @@ var whiteList = []string{
 }
 
 func MiddlewareHandlerResponse(r *ghttp.Request) {
-	r.SetCtx(gi18n.WithLanguage(r.Context(), "zh-CN")) //相应设置为中文
+	//r.SetCtx(gi18n.WithLanguage(r.Context(), "zh-CN")) //相应设置为中文
 
 	r.Middleware.Next()
 

@@ -2,14 +2,15 @@ package cmd
 
 import (
 	"context"
+	"github.com/gogf/gf/contrib/registry/etcd/v2"
+	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
 	"github.com/gogf/gf/contrib/trace/otlpgrpc/v2"
-	"github.com/gogf/gf/v2/os/gcfg"
-	"web/internal/controller"
-	"web/internal/middleware"
-
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/gcmd"
+	"web/internal/controller"
+	"web/internal/middleware"
 )
 
 var (
@@ -18,6 +19,9 @@ var (
 		Usage: "main",
 		Brief: "start http server",
 		Func: func(ctx context.Context, parser *gcmd.Parser) (err error) {
+			// grpc服务注册发现
+			grpcx.Resolver.Register(etcd.New(gcfg.Instance().MustGet(ctx, "registry.etcd").String()))
+
 			// 链路追踪初始化
 			shutdown, err := otlpgrpc.Init(
 				gcfg.Instance().MustGet(ctx, "appName").String(),

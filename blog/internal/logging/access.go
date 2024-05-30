@@ -10,6 +10,7 @@ type AccessLog struct {
 	Cost   string      `json:"cost"`
 	Req    interface{} `json:"req"`
 	Res    interface{} `json:"res"`
+	Error  error       `json:"error"`
 }
 
 func (l AccessLog) Log(ctx context.Context) {

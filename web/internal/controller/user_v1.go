@@ -11,14 +11,18 @@ import (
 	userMicroV1 "yijunqiang/gf-micro/user/api/user/v1"
 )
 
-var (
-	userConn   = grpcx.Client.MustNewGrpcClientConn("user")
-	userClient = userMicroV1.NewUserClient(userConn)
-)
+var userClient userMicroV1.UserClient
+
+func getUserClient() userMicroV1.UserClient {
+	if userClient == nil {
+		userClient = userMicroV1.NewUserClient(grpcx.Client.MustNewGrpcClientConn("user"))
+	}
+	return userClient
+}
 
 func (c *cUser) UserCreate(ctx context.Context, req *v1.UserCreateReq) (res *v1.UserCreateRes, err error) {
 	res = &v1.UserCreateRes{}
-	_, err = userClient.Create(ctx, &userMicroV1.CreateReq{
+	_, err = getUserClient().Create(ctx, &userMicroV1.CreateReq{
 		Nickname: req.Nickname,
 		Password: req.Password,
 	})
@@ -38,7 +42,7 @@ func (c *cUser) UserCreate(ctx context.Context, req *v1.UserCreateReq) (res *v1.
 
 func (c *cUser) UserLogin(ctx context.Context, req *v1.UserLoginReq) (res *v1.UserLoginRes, err error) {
 	res = &v1.UserLoginRes{}
-	ret, err := userClient.Login(ctx, &userMicroV1.LoginReq{
+	ret, err := getUserClient().Login(ctx, &userMicroV1.LoginReq{
 		Nickname: req.Nickname,
 		Password: req.Password,
 	})
@@ -59,7 +63,7 @@ func (c *cUser) UserLogin(ctx context.Context, req *v1.UserLoginReq) (res *v1.Us
 
 func (c *cUser) UserDetail(ctx context.Context, req *v1.UserDetailReq) (res *v1.UserDetailRes, err error) {
 	res = &v1.UserDetailRes{}
-	ret, err := userClient.GetOne(ctx, &userMicroV1.GetOneReq{
+	ret, err := getUserClient().GetOne(ctx, &userMicroV1.GetOneReq{
 		Id: req.Id,
 	})
 	if err != nil {

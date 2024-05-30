@@ -19,5 +19,5 @@ type ErrorLog struct {
 }
 
 func (l ErrorLog) Log(ctx context.Context) {
-	g.Log("error").Info(ctx, l)
+	g.Log("error").Error(ctx, l)
 }

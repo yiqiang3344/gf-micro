@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"github.com/gogf/gf/contrib/registry/etcd/v2"
 	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
 	"github.com/gogf/gf/contrib/trace/otlpgrpc/v2"
 	"github.com/gogf/gf/v2/frame/g"
@@ -22,6 +23,9 @@ var (
 		Usage: "main",
 		Brief: "start user micro server",
 		Func: func(ctx context.Context, parser *gcmd.Parser) (err error) {
+			// grpc服务注册发现
+			grpcx.Resolver.Register(etcd.New(gcfg.Instance().MustGet(ctx, "registry.etcd").String()))
+
 			//日志json化
 			glog.SetDefaultHandler(logging.HandlerJson)
 

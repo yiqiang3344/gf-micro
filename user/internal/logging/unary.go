@@ -34,6 +34,7 @@ func handleAccessLog(
 		Cost:   fmt.Sprintf("%.3fms", float64(duration)/1e6),
 		Req:    req,
 		Res:    res,
+		Error:  err,
 	}.Log(ctx)
 }
 

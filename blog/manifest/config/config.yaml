@@ -75,3 +75,7 @@ database:
 otlp:
   endpoint: "ip:port"
   traceToken: "token"
+
+# 服务注册发现
+registry:
+  etcd: "127.0.0.1:2379"
