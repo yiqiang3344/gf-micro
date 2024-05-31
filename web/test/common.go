@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gclient"
+	"github.com/gogf/gf/v2/os/gcfg"
+	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
+	gcfg_apollo "github.com/yiqiang3344/gcfg-apollo"
 	"golang.org/x/net/context"
 	"reflect"
 )
@@ -13,6 +16,18 @@ import (
 var (
 	Port int
 )
+
+func init() {
+	//接入配置中心
+	ctx := gctx.New()
+	if gcfg.Instance().MustGet(ctx, "apollo") != nil {
+		adapter, err := gcfg_apollo.CreateAdapterApollo(ctx)
+		if err != nil {
+			panic(err)
+		}
+		gcfg.Instance().SetAdapter(adapter)
+	}
+}
 
 func GetClient(ctx context.Context, loginUsername string) *gclient.Client {
 	if Port == 0 {
