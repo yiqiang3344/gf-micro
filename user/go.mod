@@ -60,3 +60,5 @@ require (
 )
 
 replace yijunqiang/gf-micro/user => ../user
+
+replace github.com/gogf/gf/v2 v2.7.1 => ../../gf

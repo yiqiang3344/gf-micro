@@ -71,3 +71,5 @@ require (
 replace yijunqiang/gf-micro/user v0.0.0 => ../user
 
 replace yijunqiang/gf-micro/blog v0.0.0 => ../blog
+
+replace github.com/gogf/gf/v2 v2.7.1 => ../../gf
