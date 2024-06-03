@@ -2,96 +2,100 @@ package test
 
 import (
 	"fmt"
+	"github.com/gogf/gf/contrib/registry/etcd/v2"
+	"github.com/gogf/gf/v2/os/gcfg"
+	gcfg_apollo "github.com/yiqiang3344/gcfg-apollo"
 	"testing"
 
 	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
-	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/test/gtest"
 
 	v1 "yijunqiang/gf-micro/user/api/user/v1"
 )
 
-func Test_Create(t *testing.T) {
+var (
+	userClient v1.UserClient
+)
+
+func init() {
+	//接入配置中心
+	ctx := gctx.GetInitCtx()
+	if gcfg.Instance().MustGet(ctx, "apollo") != nil {
+
+		adapter, err := gcfg_apollo.CreateAdapterApollo(ctx)
+		if err != nil {
+			panic(err)
+		}
+		gcfg.Instance().SetAdapter(adapter)
+	}
+	// grpc服务注册发现
+	grpcx.Resolver.Register(etcd.New(gcfg.Instance().MustGet(ctx, "registry.etcd").String()))
+
+	// 客户端初始化
+	userClient = v1.NewUserClient(grpcx.Client.MustNewGrpcClientConn("user"))
+}
+
+func TestCreate(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			ctx  = gctx.GetInitCtx()
-			conn = grpcx.Client.MustNewGrpcClientConn("user")
-			user = v1.NewUserClient(conn)
+			ctx = gctx.GetInitCtx()
+			err error
 		)
 		for i := 1; i <= 10; i++ {
-			_, err := user.Create(ctx, &v1.CreateReq{
+			_, err = userClient.Create(ctx, &v1.CreateReq{
 				Password: "123456",
 				Nickname: fmt.Sprintf(`nickname-%d`, i),
 			})
 			if err != nil {
-				g.Log().Fatalf(ctx, `create user failed: %+v`, err)
+				break
 			}
 		}
-		fmt.Println("test:Create success")
+		gtest.Assert(err, "")
 	})
 }
 
-func Test_GetOne(t *testing.T) {
+func TestGetOne(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			ctx  = gctx.GetInitCtx()
-			conn = grpcx.Client.MustNewGrpcClientConn("user")
-			user = v1.NewUserClient(conn)
-			res  *v1.GetOneRes
-			err  error
+			ctx = gctx.GetInitCtx()
+			res *v1.GetOneRes
+			err error
 		)
-		res, err = user.GetOne(ctx, &v1.GetOneReq{
+		res, err = userClient.GetOne(ctx, &v1.GetOneReq{
 			Id: "1",
 		})
-		if err != nil {
-			g.Log().Fatalf(ctx, `get user failed: %+v`, err)
-		}
-		fmt.Printf("test:GetOne success，result: %+v \n", res.User)
+		gtest.Assert(err, "")
+		gtest.Assert(res.User.Id, 1)
 
-		res, err = user.GetOne(ctx, &v1.GetOneReq{
+		res, err = userClient.GetOne(ctx, &v1.GetOneReq{
 			Id: "100",
 		})
-		if err != nil {
-			g.Log().Fatalf(ctx, `get user failed: %+v`, err)
-		}
-		if res.GetUser() == nil {
-			fmt.Println("test:GetOne valid success")
-		}
+		gtest.Assert(err, "")
+		gtest.Assert(res.User, "")
 	})
 }
 
-func Test_Login(t *testing.T) {
+func TestLogin(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			ctx  = gctx.GetInitCtx()
-			conn = grpcx.Client.MustNewGrpcClientConn("user")
-			user = v1.NewUserClient(conn)
+			ctx = gctx.GetInitCtx()
 		)
-		ret, err := user.Login(ctx, &v1.LoginReq{
+		ret, err := userClient.Login(ctx, &v1.LoginReq{
 			Nickname: "nickname-1",
 			Password: "123456",
 		})
-		if err != nil {
-			g.Log().Fatalf(ctx, `login user failed: %+v`, err)
-		}
-		if ret.GetToken() != "nickname-1" {
-			g.Log().Fatalf(ctx, `login user token valid: %+v`, ret.GetToken())
-		}
-		fmt.Printf("test:Login success，result: %+v \n", ret)
+		gtest.Assert(err, "")
+		gtest.Assert(ret.GetToken(), "nickname-1")
 	})
 }
 
-func Test_Validation(t *testing.T) {
+func TestValidation(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
-			ctx  = gctx.GetInitCtx()
-			conn = grpcx.Client.MustNewGrpcClientConn("user")
-			user = v1.NewUserClient(conn)
+			ctx = gctx.GetInitCtx()
 		)
-		_, err := user.Login(ctx, &v1.LoginReq{})
-		if err != nil {
-			fmt.Printf("test:Login valid success，err: %+v \n", err.Error())
-		}
+		_, err := userClient.Login(ctx, &v1.LoginReq{})
+		gtest.Assert(err, "The Nickname field is required")
 	})
 }
