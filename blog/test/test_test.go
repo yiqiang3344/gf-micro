@@ -36,7 +36,7 @@ func init() {
 	blogClient = v1.NewBlogClient(grpcx.Client.MustNewGrpcClientConn("blog"))
 }
 
-func Test_Create(t *testing.T) {
+func TestCreate(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctx = gctx.GetInitCtx()
@@ -56,7 +56,7 @@ func Test_Create(t *testing.T) {
 	})
 }
 
-func Test_GetOne(t *testing.T) {
+func TestGetOne(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctx = gctx.GetInitCtx()
@@ -76,7 +76,7 @@ func Test_GetOne(t *testing.T) {
 	})
 }
 
-func Test_Edit(t *testing.T) {
+func TestEdit(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctx = gctx.GetInitCtx()
@@ -98,7 +98,7 @@ func Test_Edit(t *testing.T) {
 	})
 }
 
-func Test_GetList(t *testing.T) {
+func TestGetList(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctx = gctx.GetInitCtx()
@@ -109,7 +109,7 @@ func Test_GetList(t *testing.T) {
 	})
 }
 
-func Test_Delete(t *testing.T) {
+func TestDelete(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctx = gctx.GetInitCtx()
@@ -127,7 +127,7 @@ func Test_Delete(t *testing.T) {
 	})
 }
 
-func Test_BatDelete(t *testing.T) {
+func TestBatDelete(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctx = gctx.GetInitCtx()
@@ -140,7 +140,7 @@ func Test_BatDelete(t *testing.T) {
 	})
 }
 
-func Test_GetBatDeleteStatus(t *testing.T) {
+func TestGetBatDeleteStatus(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctx = gctx.GetInitCtx()
@@ -153,7 +153,7 @@ func Test_GetBatDeleteStatus(t *testing.T) {
 	})
 }
 
-func Test_Validation(t *testing.T) {
+func TestValidation(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctx = gctx.GetInitCtx()

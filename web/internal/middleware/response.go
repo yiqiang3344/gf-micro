@@ -73,7 +73,7 @@ func MiddlewareHandlerResponse(r *ghttp.Request) {
 	}
 
 	//转化业务状态码
-	_code := code.Code()
+	codeTmp := code.Code()
 	if code.Code() == 0 {
 		msg = "success"
 	}
@@ -85,7 +85,7 @@ func MiddlewareHandlerResponse(r *ghttp.Request) {
 	}
 
 	r.Response.WriteJson(DefaultHandlerResponse{
-		Code:    _code,
+		Code:    codeTmp,
 		Message: msg,
 		Data:    res,
 	})

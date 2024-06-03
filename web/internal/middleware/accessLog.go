@@ -24,9 +24,9 @@ func MiddlewareHandlerAccessLog(r *ghttp.Request) {
 
 	response = r.Response.BufferString()
 	if j, err := gjson.DecodeToJson(r.Response.BufferString()); err == nil {
-		_r := new(DefaultHandlerResponse)
-		if err = j.Scan(_r); err == nil {
-			response = _r
+		rTmp := new(DefaultHandlerResponse)
+		if err = j.Scan(rTmp); err == nil {
+			response = rTmp
 		}
 	}
 
