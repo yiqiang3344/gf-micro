@@ -11,6 +11,10 @@ import (
 	"web/test"
 )
 
+var (
+	testDataFile = "./testdata/user_test.xlsx"
+)
+
 func TestUserCreate(t *testing.T) {
 	var (
 		ctx           = context.Background()
@@ -26,7 +30,7 @@ func TestUserCreate(t *testing.T) {
 
 	//1.数据准备
 	//获取excel对象
-	f, err := excelize.OpenFile("./testdata/user_test.xlsx")
+	f, err := excelize.OpenFile(testDataFile)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -60,16 +64,17 @@ func TestUserCreate(t *testing.T) {
 				test.Assert(caseName, ret, expect)
 			} else if assertType == "status" {
 				if j, err := gjson.DecodeToJson(ret); err != nil {
-					t.Error(caseName + " json解析失败:" + err.Error())
+					t.Errorf(`%+v json解析失败:%+v`, caseName, err.Error())
 				} else {
 					test.Assert(caseName, j.Get("status").String(), expect)
 				}
 			} else {
-				t.Error(caseName + " 异常的断言类型:" + assertType)
+				t.Errorf(`%+v 异常的断言类型:%+v`, caseName, assertType)
 			}
 		})
 		//是否需要删除测试数据
 		if needDelete {
+			//删除测试数据
 		}
 	}
 
@@ -91,7 +96,7 @@ func TestUserLogin(t *testing.T) {
 
 	//1.数据准备
 	//获取excel对象
-	f, err := excelize.OpenFile("./testdata/user_test.xlsx")
+	f, err := excelize.OpenFile(testDataFile)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -125,16 +130,17 @@ func TestUserLogin(t *testing.T) {
 				test.Assert(caseName, ret, expect)
 			} else if assertType == "status" {
 				if j, err := gjson.DecodeToJson(ret); err != nil {
-					t.Error(caseName + " json解析失败:" + err.Error())
+					t.Errorf(`%+v json解析失败:%+v`, caseName, err.Error())
 				} else {
 					test.Assert(caseName, j.Get("status").String(), expect)
 				}
 			} else {
-				t.Error(caseName + " 异常的断言类型:" + assertType)
+				t.Errorf(`%+v 异常的断言类型:%+v`, caseName, assertType)
 			}
 		})
 		//是否需要删除测试数据
 		if needDelete {
+			//删除测试数据
 		}
 	}
 
@@ -156,7 +162,7 @@ func TestUserDetail(t *testing.T) {
 
 	//1.数据准备
 	//获取excel对象
-	f, err := excelize.OpenFile("./testdata/user_test.xlsx")
+	f, err := excelize.OpenFile(testDataFile)
 	if !assert.NoError(t, err) {
 		t.FailNow()
 	}
@@ -189,16 +195,17 @@ func TestUserDetail(t *testing.T) {
 				test.Assert(caseName, ret, expect)
 			} else if assertType == "status" {
 				if j, err := gjson.DecodeToJson(ret); err != nil {
-					t.Error(caseName + " json解析失败:" + err.Error())
+					t.Errorf(`%+v json解析失败:%+v`, caseName, err.Error())
 				} else {
 					test.Assert(caseName, j.Get("status").String(), expect)
 				}
 			} else {
-				t.Error(caseName + " 异常的断言类型:" + assertType)
+				t.Errorf(`%+v 异常的断言类型:%+v`, caseName, assertType)
 			}
 		})
 		//是否需要删除测试数据
 		if needDelete {
+			//删除测试数据
 		}
 	}
 
