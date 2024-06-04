@@ -7,17 +7,17 @@ package service
 
 import (
 	"context"
-	"yijunqiang/gf-micro/user/api/pbentity"
-	"yijunqiang/gf-micro/user/internal/model/entity"
+	v1 "web/api/user/v1"
+	"web/internal/model"
 )
 
 type (
 	IUser interface {
-		Create(ctx context.Context, nickname string, password string) (user *entity.User, err error)
-		Login(ctx context.Context, nickname string, password string) (token string, user *pbentity.User, err error)
-		Logout(ctx context.Context, uid string) (err error)
-		GetById(ctx context.Context, uid string) (*pbentity.User, error)
-		GetByToken(ctx context.Context, token string) (user *pbentity.User, err error)
+		UserCreate(ctx context.Context, req *v1.UserCreateReq) (res *v1.UserCreateRes, err error)
+		UserLogin(ctx context.Context, req *v1.UserLoginReq) (res *v1.UserLoginRes, err error)
+		UserLogout(ctx context.Context, req *v1.UserLogoutReq) (res *v1.UserLogoutRes, err error)
+		UserDetail(ctx context.Context, req *v1.UserDetailReq) (res *v1.UserDetailRes, err error)
+		LoginByToken(ctx context.Context, token string) (user *model.User, err error)
 	}
 )
 

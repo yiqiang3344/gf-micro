@@ -91,3 +91,10 @@ otlp:
 # 服务注册发现
 registry:
   etcd: "127.0.0.1:2379"
+
+# redis
+redis:
+  default:
+    address: 127.0.0.1:6379
+    db: 1
+#    pass:

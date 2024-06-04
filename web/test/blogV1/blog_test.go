@@ -18,7 +18,7 @@ var (
 func TestBlogCreate(t *testing.T) {
 	var (
 		ctx           = context.Background()
-		client        = test.GetClient(ctx, "")
+		client        = test.GetClient(ctx)
 		err           error
 		testData      [][]string
 		caseName      string
@@ -59,6 +59,14 @@ func TestBlogCreate(t *testing.T) {
 			Content: row[6],
 		}
 		gtest.C(t, func(t *gtest.T) {
+			//是否登录
+			if row[7] == "yes" {
+				err := test.Login(ctx, row[8], row[9], client)
+				if err != nil {
+					t.Errorf(`%+v 登录失败:%+v`, caseName, err.Error())
+				}
+			}
+
 			ret := client.PostContent(ctx, "/blog/create", data)
 			if assertType == "eq" {
 				test.Assert(caseName, ret, expect)
@@ -84,7 +92,7 @@ func TestBlogCreate(t *testing.T) {
 func TestBlogEdit(t *testing.T) {
 	var (
 		ctx           = context.Background()
-		client        = test.GetClient(ctx, "")
+		client        = test.GetClient(ctx)
 		err           error
 		testData      [][]string
 		caseName      string
@@ -126,6 +134,14 @@ func TestBlogEdit(t *testing.T) {
 			Content: row[7],
 		}
 		gtest.C(t, func(t *gtest.T) {
+			//是否登录
+			if row[8] == "yes" {
+				err := test.Login(ctx, row[9], row[10], client)
+				if err != nil {
+					t.Errorf(`%+v 登录失败:%+v`, caseName, err.Error())
+				}
+			}
+
 			ret := client.PostContent(ctx, "/blog/edit", data)
 			if assertType == "eq" {
 				test.Assert(caseName, ret, expect)
@@ -151,7 +167,7 @@ func TestBlogEdit(t *testing.T) {
 func TestBlogDetail(t *testing.T) {
 	var (
 		ctx           = context.Background()
-		client        = test.GetClient(ctx, "")
+		client        = test.GetClient(ctx)
 		err           error
 		testData      [][]string
 		caseName      string
@@ -191,6 +207,14 @@ func TestBlogDetail(t *testing.T) {
 			Id: row[5],
 		}
 		gtest.C(t, func(t *gtest.T) {
+			//是否登录
+			if row[6] == "yes" {
+				err := test.Login(ctx, row[7], row[8], client)
+				if err != nil {
+					t.Errorf(`%+v 登录失败:%+v`, caseName, err.Error())
+				}
+			}
+
 			ret := client.PostContent(ctx, "/blog/detail", data)
 			if assertType == "eq" {
 				test.Assert(caseName, ret, expect)
@@ -216,7 +240,7 @@ func TestBlogDetail(t *testing.T) {
 func TestBlogList(t *testing.T) {
 	var (
 		ctx           = context.Background()
-		client        = test.GetClient(ctx, "")
+		client        = test.GetClient(ctx)
 		err           error
 		testData      [][]string
 		caseName      string
@@ -254,14 +278,28 @@ func TestBlogList(t *testing.T) {
 		}
 		data := v1.BlogDetailReq{}
 		gtest.C(t, func(t *gtest.T) {
+			//是否登录
+			if row[5] == "yes" {
+				err := test.Login(ctx, row[6], row[7], client)
+				if err != nil {
+					t.Errorf(`%+v 登录失败:%+v`, caseName, err.Error())
+				}
+			}
+
 			ret := client.PostContent(ctx, "/blog/list", data)
 			if assertType == "eq" {
 				test.Assert(caseName, ret, expect)
-			} else if assertType == "status" {
+			} else if assertType == "code" {
 				if j, err := gjson.DecodeToJson(ret); err != nil {
 					t.Errorf(`%+v json解析失败:%+v`, caseName, err.Error())
 				} else {
-					test.Assert(caseName, j.Get("status").String(), expect)
+					test.Assert(caseName, j.Get("code").String(), expect)
+				}
+			} else if assertType == "cnt" {
+				if j, err := gjson.DecodeToJson(ret); err != nil {
+					t.Errorf(`%+v json解析失败:%+v`, caseName, err.Error())
+				} else {
+					test.Assert(caseName, len(j.Get("data.list").Slice()), expect)
 				}
 			} else {
 				t.Errorf(`%+v 异常的断言类型:%+v`, caseName, assertType)
@@ -279,7 +317,7 @@ func TestBlogList(t *testing.T) {
 func TestBlogDelete(t *testing.T) {
 	var (
 		ctx           = context.Background()
-		client        = test.GetClient(ctx, "")
+		client        = test.GetClient(ctx)
 		err           error
 		testData      [][]string
 		caseName      string
@@ -319,14 +357,22 @@ func TestBlogDelete(t *testing.T) {
 			Id: row[5],
 		}
 		gtest.C(t, func(t *gtest.T) {
+			//是否登录
+			if row[6] == "yes" {
+				err := test.Login(ctx, row[7], row[8], client)
+				if err != nil {
+					t.Errorf(`%+v 登录失败:%+v`, caseName, err.Error())
+				}
+			}
+
 			ret := client.PostContent(ctx, "/blog/delete", data)
 			if assertType == "eq" {
 				test.Assert(caseName, ret, expect)
-			} else if assertType == "status" {
+			} else if assertType == "code" {
 				if j, err := gjson.DecodeToJson(ret); err != nil {
 					t.Errorf(`%+v json解析失败:%+v`, caseName, err.Error())
 				} else {
-					test.Assert(caseName, j.Get("status").String(), expect)
+					test.Assert(caseName, j.Get("code").String(), expect)
 				}
 			} else {
 				t.Errorf(`%+v 异常的断言类型:%+v`, caseName, assertType)
@@ -344,7 +390,7 @@ func TestBlogDelete(t *testing.T) {
 func TestBlogBatDelete(t *testing.T) {
 	var (
 		ctx           = context.Background()
-		client        = test.GetClient(ctx, "")
+		client        = test.GetClient(ctx)
 		err           error
 		testData      [][]string
 		caseName      string
@@ -384,14 +430,22 @@ func TestBlogBatDelete(t *testing.T) {
 			Ids: row[5],
 		}
 		gtest.C(t, func(t *gtest.T) {
+			//是否登录
+			if row[6] == "yes" {
+				err := test.Login(ctx, row[7], row[8], client)
+				if err != nil {
+					t.Errorf(`%+v 登录失败:%+v`, caseName, err.Error())
+				}
+			}
+
 			ret := client.PostContent(ctx, "/blog/bat-delete", data)
 			if assertType == "eq" {
 				test.Assert(caseName, ret, expect)
-			} else if assertType == "status" {
+			} else if assertType == "code" {
 				if j, err := gjson.DecodeToJson(ret); err != nil {
 					t.Errorf(`%+v json解析失败:%+v`, caseName, err.Error())
 				} else {
-					test.Assert(caseName, j.Get("status").String(), expect)
+					test.Assert(caseName, j.Get("code").String(), expect)
 				}
 			} else {
 				t.Errorf(`%+v 异常的断言类型:%+v`, caseName, assertType)
@@ -409,7 +463,7 @@ func TestBlogBatDelete(t *testing.T) {
 func TestBlogGetBatDeleteStatus(t *testing.T) {
 	var (
 		ctx           = context.Background()
-		client        = test.GetClient(ctx, "")
+		client        = test.GetClient(ctx)
 		err           error
 		testData      [][]string
 		caseName      string
@@ -449,14 +503,22 @@ func TestBlogGetBatDeleteStatus(t *testing.T) {
 			BatNo: row[5],
 		}
 		gtest.C(t, func(t *gtest.T) {
+			//是否登录
+			if row[6] == "yes" {
+				err := test.Login(ctx, row[7], row[8], client)
+				if err != nil {
+					t.Errorf(`%+v 登录失败:%+v`, caseName, err.Error())
+				}
+			}
+
 			ret := client.PostContent(ctx, "/blog/get-bat-delete-status", data)
 			if assertType == "eq" {
 				test.Assert(caseName, ret, expect)
-			} else if assertType == "status" {
+			} else if assertType == "code" {
 				if j, err := gjson.DecodeToJson(ret); err != nil {
 					t.Errorf(`%+v json解析失败:%+v`, caseName, err.Error())
 				} else {
-					test.Assert(caseName, j.Get("status").String(), expect)
+					test.Assert(caseName, j.Get("code").String(), expect)
 				}
 			} else {
 				t.Errorf(`%+v 异常的断言类型:%+v`, caseName, assertType)

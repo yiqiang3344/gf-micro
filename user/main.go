@@ -2,6 +2,7 @@ package main
 
 import (
 	_ "github.com/gogf/gf/contrib/drivers/mysql/v2"
+	_ "github.com/gogf/gf/contrib/nosql/redis/v2"
 	"github.com/gogf/gf/v2/os/gcfg"
 	gcfg_apollo "github.com/yiqiang3344/gcfg-apollo"
 	_ "yijunqiang/gf-micro/user/internal/logic"

@@ -1,7 +1,9 @@
 package test
 
 import (
+	"errors"
 	"fmt"
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gclient"
 	"github.com/gogf/gf/v2/os/gcfg"
@@ -11,6 +13,7 @@ import (
 	gcfg_apollo "github.com/yiqiang3344/gcfg-apollo"
 	"golang.org/x/net/context"
 	"reflect"
+	v1 "web/api/user/v1"
 )
 
 var (
@@ -29,7 +32,7 @@ func init() {
 	}
 }
 
-func GetClient(ctx context.Context, loginUsername string) *gclient.Client {
+func GetClient(ctx context.Context, token ...string) *gclient.Client {
 	if Port == 0 {
 		Port = gconv.Int(gstr.Split(g.Cfg().MustGet(context.Background(), "server.address").String(), ":")[1])
 	}
@@ -38,11 +41,28 @@ func GetClient(ctx context.Context, loginUsername string) *gclient.Client {
 	client := g.Client()
 	client.SetPrefix(prefix)
 
-	if loginUsername != "" {
-		client.SetHeader("token", loginUsername)
+	if len(token) > 0 {
+		client.SetHeader("token", token[0])
 	}
 
 	return client
+}
+
+func Login(ctx context.Context, nickname, Password string, client *gclient.Client) (err error) {
+	retTmp := client.PostContent(ctx, "/user/login", v1.UserLoginReq{
+		Nickname: nickname,
+		Password: Password,
+	})
+	j, err := gjson.DecodeToJson(retTmp)
+	if err != nil {
+		return
+	}
+	if j.Get("code").String() != "0" {
+		err = errors.New("登录失败")
+		return
+	}
+	client.SetHeader("token", j.Get("data.token").String())
+	return
 }
 
 func isNil(value interface{}, traceSource ...bool) bool {

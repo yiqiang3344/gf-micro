@@ -1,9 +1,13 @@
 package main
 
 import (
+	_ "github.com/gogf/gf/contrib/nosql/redis/v2"
+	_ "web/internal/logic"
+
+	_ "web/internal/packed"
+
 	"github.com/gogf/gf/v2/os/gcfg"
 	gcfg_apollo "github.com/yiqiang3344/gcfg-apollo"
-	_ "web/internal/packed"
 
 	"github.com/gogf/gf/v2/os/gctx"
 

@@ -4,6 +4,9 @@ import (
 	"context"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/util/gconv"
+	"yijunqiang/gf-micro/user/internal/logging"
 	"yijunqiang/gf-micro/user/internal/model/entity"
 
 	"yijunqiang/gf-micro/user/api/pbentity"
@@ -21,6 +24,20 @@ func init() {
 }
 
 func (s *sUser) Create(ctx context.Context, nickname string, password string) (user *entity.User, err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			err = e.(error)
+			logging.BizLog{
+				Tag:     "Create",
+				Message: "failed",
+			}.Log(ctx)
+		} else {
+			logging.BizLog{
+				Tag:     "Create",
+				Message: "success",
+			}.Log(ctx)
+		}
+	}()
 	user = &entity.User{
 		Nickname: nickname,
 		Password: password,
@@ -32,8 +49,21 @@ func (s *sUser) Create(ctx context.Context, nickname string, password string) (u
 	return
 }
 
-func (s *sUser) Login(ctx context.Context, nickname string, password string) (token string, err error) {
-	user := (*entity.User)(nil)
+func (s *sUser) Login(ctx context.Context, nickname string, password string) (token string, user *pbentity.User, err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			err = e.(error)
+			logging.BizLog{
+				Tag:     "Login",
+				Message: "failed",
+			}.Log(ctx)
+		} else {
+			logging.BizLog{
+				Tag:     "Login",
+				Message: "success",
+			}.Log(ctx)
+		}
+	}()
 	err = dao.User.Ctx(ctx).Where(do.User{
 		Nickname: nickname,
 		Password: password,
@@ -45,7 +75,38 @@ func (s *sUser) Login(ctx context.Context, nickname string, password string) (to
 		err = gerror.NewCode(gcode.CodeBusinessValidationFailed, "账号或密码错误")
 		return
 	}
-	token = user.Nickname
+
+	//缓存的token已存在则直接使用，不存在则生成新的
+	token, err = GetCacheToken(ctx, gconv.String(user.Id))
+	if err != nil {
+		return
+	}
+	if !g.IsEmpty(token) {
+		return
+	}
+	token, err = Token(ctx, gconv.String(user.Id))
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (s *sUser) Logout(ctx context.Context, uid string) (err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			err = e.(error)
+			logging.BizLog{
+				Tag:     "Logout",
+				Message: "failed",
+			}.Log(ctx)
+		} else {
+			logging.BizLog{
+				Tag:     "Logout",
+				Message: "success",
+			}.Log(ctx)
+		}
+	}()
+	err = Clear(ctx, uid)
 	return
 }
 
@@ -55,4 +116,15 @@ func (s *sUser) GetById(ctx context.Context, uid string) (*pbentity.User, error)
 		Id: uid,
 	}).Scan(&user)
 	return user, err
+}
+
+func (s *sUser) GetByToken(ctx context.Context, token string) (user *pbentity.User, err error) {
+	uid, err := Parse(ctx, token)
+	if err != nil {
+		return
+	}
+	err = dao.User.Ctx(ctx).Where(do.User{
+		Id: uid,
+	}).Scan(&user)
+	return
 }

@@ -22,9 +22,11 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	User_Create_FullMethodName = "/user.User/Create"
-	User_Login_FullMethodName  = "/user.User/Login"
-	User_GetOne_FullMethodName = "/user.User/GetOne"
+	User_Create_FullMethodName     = "/user.User/Create"
+	User_Login_FullMethodName      = "/user.User/Login"
+	User_Logout_FullMethodName     = "/user.User/Logout"
+	User_GetOne_FullMethodName     = "/user.User/GetOne"
+	User_GetByToken_FullMethodName = "/user.User/GetByToken"
 )
 
 // UserClient is the client API for User service.
@@ -33,7 +35,9 @@ const (
 type UserClient interface {
 	Create(ctx context.Context, in *CreateReq, opts ...grpc.CallOption) (*CreateRes, error)
 	Login(ctx context.Context, in *LoginReq, opts ...grpc.CallOption) (*LoginRes, error)
+	Logout(ctx context.Context, in *LogoutReq, opts ...grpc.CallOption) (*LogoutRes, error)
 	GetOne(ctx context.Context, in *GetOneReq, opts ...grpc.CallOption) (*GetOneRes, error)
+	GetByToken(ctx context.Context, in *GetByTokenReq, opts ...grpc.CallOption) (*GetByTokenRes, error)
 }
 
 type userClient struct {
@@ -62,9 +66,27 @@ func (c *userClient) Login(ctx context.Context, in *LoginReq, opts ...grpc.CallO
 	return out, nil
 }
 
+func (c *userClient) Logout(ctx context.Context, in *LogoutReq, opts ...grpc.CallOption) (*LogoutRes, error) {
+	out := new(LogoutRes)
+	err := c.cc.Invoke(ctx, User_Logout_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *userClient) GetOne(ctx context.Context, in *GetOneReq, opts ...grpc.CallOption) (*GetOneRes, error) {
 	out := new(GetOneRes)
 	err := c.cc.Invoke(ctx, User_GetOne_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userClient) GetByToken(ctx context.Context, in *GetByTokenReq, opts ...grpc.CallOption) (*GetByTokenRes, error) {
+	out := new(GetByTokenRes)
+	err := c.cc.Invoke(ctx, User_GetByToken_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +99,9 @@ func (c *userClient) GetOne(ctx context.Context, in *GetOneReq, opts ...grpc.Cal
 type UserServer interface {
 	Create(context.Context, *CreateReq) (*CreateRes, error)
 	Login(context.Context, *LoginReq) (*LoginRes, error)
+	Logout(context.Context, *LogoutReq) (*LogoutRes, error)
 	GetOne(context.Context, *GetOneReq) (*GetOneRes, error)
+	GetByToken(context.Context, *GetByTokenReq) (*GetByTokenRes, error)
 	mustEmbedUnimplementedUserServer()
 }
 
@@ -91,8 +115,14 @@ func (UnimplementedUserServer) Create(context.Context, *CreateReq) (*CreateRes, 
 func (UnimplementedUserServer) Login(context.Context, *LoginReq) (*LoginRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Login not implemented")
 }
+func (UnimplementedUserServer) Logout(context.Context, *LogoutReq) (*LogoutRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Logout not implemented")
+}
 func (UnimplementedUserServer) GetOne(context.Context, *GetOneReq) (*GetOneRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetOne not implemented")
+}
+func (UnimplementedUserServer) GetByToken(context.Context, *GetByTokenReq) (*GetByTokenRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetByToken not implemented")
 }
 func (UnimplementedUserServer) mustEmbedUnimplementedUserServer() {}
 
@@ -143,6 +173,24 @@ func _User_Login_Handler(srv interface{}, ctx context.Context, dec func(interfac
 	return interceptor(ctx, in, info, handler)
 }
 
+func _User_Logout_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LogoutReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServer).Logout(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: User_Logout_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServer).Logout(ctx, req.(*LogoutReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _User_GetOne_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetOneReq)
 	if err := dec(in); err != nil {
@@ -157,6 +205,24 @@ func _User_GetOne_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(UserServer).GetOne(ctx, req.(*GetOneReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _User_GetByToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetByTokenReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServer).GetByToken(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: User_GetByToken_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServer).GetByToken(ctx, req.(*GetByTokenReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -177,8 +243,16 @@ var User_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _User_Login_Handler,
 		},
 		{
+			MethodName: "Logout",
+			Handler:    _User_Logout_Handler,
+		},
+		{
 			MethodName: "GetOne",
 			Handler:    _User_GetOne_Handler,
+		},
+		{
+			MethodName: "GetByToken",
+			Handler:    _User_GetByToken_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

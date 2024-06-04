@@ -18,7 +18,7 @@ var (
 func TestUserCreate(t *testing.T) {
 	var (
 		ctx           = context.Background()
-		client        = test.GetClient(ctx, "")
+		client        = test.GetClient(ctx)
 		err           error
 		testData      [][]string
 		caseName      string
@@ -84,7 +84,7 @@ func TestUserCreate(t *testing.T) {
 func TestUserLogin(t *testing.T) {
 	var (
 		ctx           = context.Background()
-		client        = test.GetClient(ctx, "")
+		client        = test.GetClient(ctx)
 		err           error
 		testData      [][]string
 		caseName      string
@@ -128,11 +128,11 @@ func TestUserLogin(t *testing.T) {
 			ret := client.PostContent(ctx, "/user/login", data)
 			if assertType == "eq" {
 				test.Assert(caseName, ret, expect)
-			} else if assertType == "status" {
+			} else if assertType == "code" {
 				if j, err := gjson.DecodeToJson(ret); err != nil {
 					t.Errorf(`%+v json解析失败:%+v`, caseName, err.Error())
 				} else {
-					test.Assert(caseName, j.Get("status").String(), expect)
+					test.Assert(caseName, j.Get("code").String(), expect)
 				}
 			} else {
 				t.Errorf(`%+v 异常的断言类型:%+v`, caseName, assertType)
@@ -150,7 +150,7 @@ func TestUserLogin(t *testing.T) {
 func TestUserDetail(t *testing.T) {
 	var (
 		ctx           = context.Background()
-		client        = test.GetClient(ctx, "")
+		client        = test.GetClient(ctx)
 		err           error
 		testData      [][]string
 		caseName      string
@@ -186,22 +186,107 @@ func TestUserDetail(t *testing.T) {
 		if !testCaseValid {
 			continue
 		}
-		data := v1.UserDetailReq{
-			Id: row[5],
-		}
+		data := v1.UserDetailReq{}
 		gtest.C(t, func(t *gtest.T) {
+			//是否登录
+			if row[5] == "yes" {
+				err := test.Login(ctx, row[6], row[7], client)
+				if err != nil {
+					t.Errorf(`%+v 登录失败:%+v`, caseName, err.Error())
+					return
+				}
+			}
+
 			ret := client.PostContent(ctx, "/user/detail", data)
 			if assertType == "eq" {
 				test.Assert(caseName, ret, expect)
-			} else if assertType == "status" {
+			} else if assertType == "code" {
 				if j, err := gjson.DecodeToJson(ret); err != nil {
 					t.Errorf(`%+v json解析失败:%+v`, caseName, err.Error())
+					return
 				} else {
-					test.Assert(caseName, j.Get("status").String(), expect)
+					test.Assert(caseName, j.Get("code").String(), expect)
 				}
 			} else {
 				t.Errorf(`%+v 异常的断言类型:%+v`, caseName, assertType)
+				return
 			}
+			client.SetHeader("token", "")
+		})
+		//是否需要删除测试数据
+		if needDelete {
+			//删除测试数据
+		}
+	}
+
+	//3.清除准备数据
+}
+
+func TestUserLogout(t *testing.T) {
+	var (
+		ctx           = context.Background()
+		client        = test.GetClient(ctx)
+		err           error
+		testData      [][]string
+		caseName      string
+		assertType    string
+		expect        string
+		needDelete    bool
+		testCaseValid bool
+	)
+
+	//1.数据准备
+	//获取excel对象
+	f, err := excelize.OpenFile(testDataFile)
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+
+	//2.测试用例
+	testData, err = f.GetRows("userLogout")
+	if !assert.NoError(t, err) {
+		t.FailNow()
+	}
+	for i, row := range testData {
+		if i == 0 {
+			//第一行是行头，不是数据
+			continue
+		}
+		caseName = row[0]               //用例名称
+		testCaseValid = row[1] == "yes" //测试用例是否开启
+		needDelete = row[2] == "yes"    //是否需要删除测试数据
+		assertType = row[3]             //测试用例断言方式
+		expect = row[4]                 //测试用例期望结果
+
+		if !testCaseValid {
+			continue
+		}
+		data := v1.UserDetailReq{}
+		gtest.C(t, func(t *gtest.T) {
+			//是否登录
+			if row[5] == "yes" {
+				err := test.Login(ctx, row[6], row[7], client)
+				if err != nil {
+					t.Errorf(`%+v 登录失败:%+v`, caseName, err.Error())
+					return
+				}
+			}
+
+			ret := client.PostContent(ctx, "/user/logout", data)
+			if assertType == "eq" {
+				test.Assert(caseName, ret, expect)
+			} else if assertType == "code" {
+				if j, err := gjson.DecodeToJson(ret); err != nil {
+					t.Errorf(`%+v json解析失败:%+v`, caseName, err.Error())
+					return
+				} else {
+					test.Assert(caseName, j.Get("code").String(), expect)
+				}
+			} else {
+				t.Errorf(`%+v 异常的断言类型:%+v`, caseName, assertType)
+				return
+			}
+			client.SetHeader("token", "")
 		})
 		//是否需要删除测试数据
 		if needDelete {

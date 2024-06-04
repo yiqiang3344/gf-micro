@@ -22,7 +22,6 @@ func init() {
 	//接入配置中心
 	ctx := gctx.GetInitCtx()
 	if gcfg.Instance().MustGet(ctx, "apollo") != nil {
-
 		adapter, err := gcfg_apollo.CreateAdapterApollo(ctx)
 		if err != nil {
 			panic(err)
@@ -86,7 +85,20 @@ func TestLogin(t *testing.T) {
 			Password: "123456",
 		})
 		gtest.Assert(err, "")
-		gtest.Assert(ret.GetToken(), "nickname-1")
+		gtest.AssertNE(ret.GetToken(), "")
+		gtest.AssertNE(ret.GetUser(), "")
+	})
+}
+
+func TestLogout(t *testing.T) {
+	gtest.C(t, func(t *gtest.T) {
+		var (
+			ctx = gctx.GetInitCtx()
+		)
+		_, err := userClient.Logout(ctx, &v1.LogoutReq{
+			Id: "1",
+		})
+		gtest.Assert(err, "")
 	})
 }
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
+	"yijunqiang/gf-micro/blog/internal/logging"
 	"yijunqiang/gf-micro/blog/internal/model/entity"
 
 	"yijunqiang/gf-micro/blog/api/pbentity"
@@ -20,17 +21,45 @@ func init() {
 	service.RegisterBlog(&sBlog{})
 }
 
-func (s *sBlog) Create(ctx context.Context, title string, content string, nickname string) (*entity.Blog, error) {
-	blog := &entity.Blog{
+func (s *sBlog) Create(ctx context.Context, title string, content string, nickname string) (blog *entity.Blog, err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			err = e.(error)
+			logging.BizLog{
+				Tag:     "Create",
+				Message: "failed",
+			}.Log(ctx)
+		} else {
+			logging.BizLog{
+				Tag:     "Create",
+				Message: "success",
+			}.Log(ctx)
+		}
+	}()
+	blog = &entity.Blog{
 		Title:    title,
 		Content:  content,
 		Nickname: nickname,
 	}
-	_, err := dao.Blog.Ctx(ctx).Data(blog).Insert()
-	return blog, err
+	_, err = dao.Blog.Ctx(ctx).Data(blog).Insert()
+	return
 }
 
 func (s *sBlog) Edit(ctx context.Context, id uint64, title string, content string, nickname string) (err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			err = e.(error)
+			logging.BizLog{
+				Tag:     "Edit",
+				Message: "failed",
+			}.Log(ctx)
+		} else {
+			logging.BizLog{
+				Tag:     "Edit",
+				Message: "success",
+			}.Log(ctx)
+		}
+	}()
 	blog, err := s.GetById(ctx, id)
 	if err != nil {
 		return
@@ -73,6 +102,20 @@ func (s *sBlog) GetList(ctx context.Context) (list []*pbentity.Blog, err error) 
 }
 
 func (s *sBlog) Delete(ctx context.Context, id uint64) (err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			err = e.(error)
+			logging.BizLog{
+				Tag:     "Delete",
+				Message: "failed",
+			}.Log(ctx)
+		} else {
+			logging.BizLog{
+				Tag:     "Delete",
+				Message: "success",
+			}.Log(ctx)
+		}
+	}()
 	blog, err := s.GetById(ctx, id)
 	if err != nil {
 		return
@@ -91,6 +134,20 @@ func (s *sBlog) Delete(ctx context.Context, id uint64) (err error) {
 }
 
 func (s *sBlog) BatDelete(ctx context.Context, ids []uint64) (batNo string, err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			err = e.(error)
+			logging.BizLog{
+				Tag:     "BatDelete",
+				Message: "failed",
+			}.Log(ctx)
+		} else {
+			logging.BizLog{
+				Tag:     "BatDelete",
+				Message: "success",
+			}.Log(ctx)
+		}
+	}()
 	_, err = dao.Blog.Ctx(ctx).WhereIn("id", ids).Delete()
 	if err != nil {
 		return
