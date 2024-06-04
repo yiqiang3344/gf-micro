@@ -1,7 +1,6 @@
 package main
 
 import (
-	_ "github.com/gogf/gf/contrib/nosql/redis/v2"
 	_ "web/internal/logic"
 
 	_ "web/internal/packed"
