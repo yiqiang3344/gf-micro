@@ -16,4 +16,4 @@ manifest/output/
 temp/
 temp.yaml
 bin
-*/**/config/config.xinfei.yaml
+*/**/config/config.*.yaml

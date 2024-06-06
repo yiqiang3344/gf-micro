@@ -13,10 +13,12 @@ import (
 
 type MqClient struct {
 	endpoint string
+	producer rmq_client.Producer
 }
 
 // Client 获取mq客户端，endpoint 为mq服务器地址加端口，示例：127.0.0.1:9876
 func Client(endpoint string) *MqClient {
+	// todo 参数配置化，提升扩展性
 	return &MqClient{
 		endpoint: endpoint,
 	}
@@ -32,7 +34,7 @@ const (
 	TopicTransaction TopicType = "TRANSACTION"
 )
 
-// SendOptions 发送消息时的可选参数
+// SendOptions 发送消息时的可选参数，todo 拆分生产者和发送的参数，生产者参数包含是否发送完及销毁配置
 type SendOptions struct {
 	NameSpace          string                          //命名空间，可选
 	ConsumerGroup      string                          //消费者组，可选
@@ -43,6 +45,7 @@ type SendOptions struct {
 	Properties         map[string]string               //消息属性，可选
 	DeliveryTimestamp  *time.Time                      //延时时间，Delay类型主题用
 	MaxAttempts        int32                           //重试次数，可选
+	Async              bool                            //异步发送
 	successFunc        SendSuccessFunc                 //消息成功处理方法，可选
 	failedFunc         SendFailedFunc                  //消息失败处理方法，可选
 	transactionChecker SendTransactionCheckerFunc      //事务检查器，事务消息必填
@@ -128,6 +131,11 @@ func WithSendOptionMaxAttempts(maxAttempts int32) SendOptionFunc {
 		o.MaxAttempts = maxAttempts
 	}
 }
+func WithSendOptionAsync(async bool) SendOptionFunc {
+	return func(o *SendOptions) {
+		o.Async = async
+	}
+}
 func WithSendOptionSuccessFunc(successFunc SendSuccessFunc) SendOptionFunc {
 	return func(o *SendOptions) {
 		o.successFunc = successFunc
@@ -157,6 +165,7 @@ var defaultSendOption = SendOptions{
 	Keys:          []string{},
 	Properties:    map[string]string{},
 	MaxAttempts:   3,
+	Async:         false,
 }
 
 func (s *MqClient) initMsg(topic, message string, options *SendOptions) *rmq_client.Message {
@@ -188,6 +197,7 @@ func (s *MqClient) initMsg(topic, message string, options *SendOptions) *rmq_cli
 	return msg
 }
 
+// todo 初始化生产者时参数化，可传入topic列表
 func (s *MqClient) initProducer(ctx context.Context, topicType TopicType, topic string, options *SendOptions) (producer rmq_client.Producer, err error) {
 	switch topicType {
 	case TopicNormal, TopicFIFO, TopicDelay:
@@ -218,6 +228,8 @@ func (s *MqClient) initProducer(ctx context.Context, topicType TopicType, topic 
 	}
 	return
 }
+
+//todo 提供手动销毁生产者的方法
 
 func (s *MqClient) send(ctx context.Context, topicType TopicType, topic string, options *SendOptions, producer rmq_client.Producer, message string) {
 	msg := s.initMsg(topic, message, options)
@@ -250,10 +262,11 @@ func (s *MqClient) send(ctx context.Context, topicType TopicType, topic string, 
 			options.callSuccessFunc(message, resp)
 		}
 	}
+
 	return
 }
 
-// SendMsgs 发送常用类型消息，包括Normal、FIFO、Delay。
+// SendMsgs 发送消息，包括Normal、FIFO、Delay、Transaction。 todo 支持发送不同消息类型的消息，提升生产者的使用范围
 func (s *MqClient) SendMsgs(ctx context.Context, topicType TopicType, topic string, messages []string, sendOptionFunc ...SendOptionFunc) (err error) {
 	if len(messages) == 0 {
 		return

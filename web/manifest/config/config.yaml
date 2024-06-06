@@ -13,7 +13,7 @@
 appName: web
 
 server:
-  address: ":8080"
+  address: ":8089"
   openapiPath: "/api.json"
   swaggerPath: "/swagger"
   LogStdout: false

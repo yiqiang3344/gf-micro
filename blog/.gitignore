@@ -18,4 +18,4 @@ cbuild
 main
 .vscode
 temp/
-*/**/config.xinfei.yaml
+*/**/config.*.yaml
