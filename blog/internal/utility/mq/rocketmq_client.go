@@ -4,333 +4,309 @@ import (
 	"context"
 	"errors"
 	rmq_client "github.com/apache/rocketmq-clients/golang/v5"
-	"github.com/apache/rocketmq-clients/golang/v5/credentials"
 	v2 "github.com/apache/rocketmq-clients/golang/v5/protocol/v2"
-	"os"
 	"strings"
 	"time"
 )
-
-type MqClient struct {
-	endpoint string
-	producer rmq_client.Producer
-}
-
-// Client 获取mq客户端，endpoint 为mq服务器地址加端口，示例：127.0.0.1:9876
-func Client(endpoint string) *MqClient {
-	// todo 参数配置化，提升扩展性
-	return &MqClient{
-		endpoint: endpoint,
-	}
-}
 
 // TopicType 主题类型
 type TopicType string
 
 const (
-	TopicNormal      TopicType = "NORMAL"
+	TopicNormal      TopicType = "Normal"
 	TopicFIFO        TopicType = "FIFO"
-	TopicDelay       TopicType = "DELAY"
-	TopicTransaction TopicType = "TRANSACTION"
+	TopicDelay       TopicType = "Delay"
+	TopicTransaction TopicType = "Transaction"
 )
 
-// SendOptions 发送消息时的可选参数，todo 拆分生产者和发送的参数，生产者参数包含是否发送完及销毁配置
-type SendOptions struct {
-	NameSpace          string                          //命名空间，可选
-	ConsumerGroup      string                          //消费者组，可选
-	Credentials        *credentials.SessionCredentials //鉴权，可选
-	Tag                string                          //标签，可选
-	MessageGroup       string                          //消息组，FIFO类型主题用，可选
-	Keys               []string                        //key列表，可选
-	Properties         map[string]string               //消息属性，可选
-	DeliveryTimestamp  *time.Time                      //延时时间，Delay类型主题用
-	MaxAttempts        int32                           //重试次数，可选
-	Async              bool                            //异步发送
-	successFunc        SendSuccessFunc                 //消息成功处理方法，可选
-	failedFunc         SendFailedFunc                  //消息失败处理方法，可选
-	transactionChecker SendTransactionCheckerFunc      //事务检查器，事务消息必填
-	sendEndFunc        SendTransactionEndFunc          //事务消息发送结束处理方法，可选
+type Client interface {
+	StartProducer(ctx context.Context, oFunc ...ProducerOptionFunc) error                                   //启动生产者
+	StopProducer() error                                                                                    //注销消费者
+	Send(ctx context.Context, topicType TopicType, msg Message) (resp []*rmq_client.SendReceipt, err error) //同步发送消息
+	SendAsync(ctx context.Context, topicType TopicType, msg Message, dealFunc SendAsyncDealFunc) error      //异步发送消息
+	SendTransaction(ctx context.Context, message Message, confirmFunc ConfirmFunc) error                    //发送事务消息
+	SimpleConsume(ctx context.Context, consumeFuc ConsumeFunc, oFunc ...ConsumerOptionFunc) error           //简单模式消费消息
 }
 
-func (s *SendOptions) callSuccessFunc(message string, res []*rmq_client.SendReceipt) {
-	if s.successFunc != nil {
-		s.successFunc(message, res, *s)
+// GetClient 获取mq客户端
+func GetClient(cfg *rmq_client.Config) Client {
+	return &defaultClient{
+		Cfg: cfg,
 	}
 }
 
-func (s *SendOptions) callFailedFunc(message string, err error) {
-	if s.failedFunc != nil {
-		s.failedFunc(message, err, *s)
-	}
-}
+type ProducerOptionFunc func(options *ProducerOptions)
 
-func (s *SendOptions) callSendEndFunc(message string, res []*rmq_client.SendReceipt) bool {
-	if s.sendEndFunc != nil {
-		return s.sendEndFunc(message, res, *s)
-	}
-	return true
-}
-
-// SendFailedFunc 发送失败的处理方法
-type SendFailedFunc func(message string, err error, options SendOptions)
-
-// SendSuccessFunc 发送成功的处理方法
-type SendSuccessFunc func(message string, res []*rmq_client.SendReceipt, options SendOptions)
-
-// SendOptionFunc 发送可选参数配置方法
-type SendOptionFunc func(options *SendOptions)
-
-// SendTransactionCheckerFunc 发送事务消息时的检查器
-type SendTransactionCheckerFunc func(msg *rmq_client.MessageView) rmq_client.TransactionResolution
-
-// SendTransactionEndFunc 事务消息发送完毕后的事务逻辑处理方法，返回 true 则消息事务commit, 否则 rollback
-type SendTransactionEndFunc func(message string, res []*rmq_client.SendReceipt, options SendOptions) bool
-
-func WithSendOptionNameSpace(namespace string) SendOptionFunc {
-	return func(o *SendOptions) {
-		o.NameSpace = namespace
-	}
-}
-func WithSendOptionConsumerGroup(consumerGroup string) SendOptionFunc {
-	return func(o *SendOptions) {
-		o.ConsumerGroup = consumerGroup
-	}
-}
-func WithSendOptionCredentials(credentials credentials.SessionCredentials) SendOptionFunc {
-	return func(o *SendOptions) {
-		o.Credentials = &credentials
-	}
-}
-func WithSendOptionTag(tag string) SendOptionFunc {
-	return func(o *SendOptions) {
-		o.Tag = tag
-	}
-}
-func WithSendOptionMessageGroup(messageGroup string) SendOptionFunc {
-	return func(o *SendOptions) {
-		o.MessageGroup = messageGroup
-	}
-}
-func WithSendOptionKeys(keys []string) SendOptionFunc {
-	return func(o *SendOptions) {
-		o.Keys = keys
-	}
-}
-func WithSendOptionProperties(properties map[string]string) SendOptionFunc {
-	return func(o *SendOptions) {
-		o.Properties = properties
-	}
-}
-func WithSendOptionDeliveryTimestamp(deliveryTimestamp *time.Time) SendOptionFunc {
-	return func(o *SendOptions) {
-		o.DeliveryTimestamp = deliveryTimestamp
-	}
-}
-func WithSendOptionMaxAttempts(maxAttempts int32) SendOptionFunc {
-	return func(o *SendOptions) {
+func WithProducerOptionMaxAttempts(maxAttempts int32) ProducerOptionFunc {
+	return func(o *ProducerOptions) {
 		o.MaxAttempts = maxAttempts
 	}
 }
-func WithSendOptionAsync(async bool) SendOptionFunc {
-	return func(o *SendOptions) {
-		o.Async = async
-	}
-}
-func WithSendOptionSuccessFunc(successFunc SendSuccessFunc) SendOptionFunc {
-	return func(o *SendOptions) {
-		o.successFunc = successFunc
-	}
-}
-func WithSendOptionFailedFunc(failedFunc SendFailedFunc) SendOptionFunc {
-	return func(o *SendOptions) {
-		o.failedFunc = failedFunc
-	}
-}
-func WithSendOptionSendEndFunc(sendEndFunc SendTransactionEndFunc) SendOptionFunc {
-	return func(o *SendOptions) {
-		o.sendEndFunc = sendEndFunc
-	}
-}
-func WithSendOptionTransactionChecker(transactionChecker SendTransactionCheckerFunc) SendOptionFunc {
-	return func(o *SendOptions) {
+
+type SendTransactionCheckerFunc func(msg *rmq_client.MessageView) rmq_client.TransactionResolution
+
+func WithProducerOptionTransactionChecker(transactionChecker SendTransactionCheckerFunc) ProducerOptionFunc {
+	return func(o *ProducerOptions) {
 		o.transactionChecker = transactionChecker
 	}
 }
 
-var defaultSendOption = SendOptions{
-	NameSpace:     "",
-	ConsumerGroup: "",
-	Tag:           "",
-	MessageGroup:  "",
-	Keys:          []string{},
-	Properties:    map[string]string{},
-	MaxAttempts:   3,
-	Async:         false,
+type ProducerOptions struct {
+	Topics             []string                   //支持的主题列表，可选
+	MaxAttempts        int32                      //重试次数，可选
+	transactionChecker SendTransactionCheckerFunc //事务检查器，事务消息必填
 }
 
-func (s *MqClient) initMsg(topic, message string, options *SendOptions) *rmq_client.Message {
-	//初始化消息体
-	msg := &rmq_client.Message{
-		Topic: topic,
-		Body:  []byte(message),
-	}
-	//设置消息tag
-	if options.Tag != "" {
-		msg.SetTag(options.Tag)
-	}
-	//设置消息组（只有FIFO类型topic可用）
-	if options.MessageGroup != "" {
-		msg.SetMessageGroup(options.MessageGroup)
-	}
-	//设置消息key
-	msg.SetKeys(options.Keys...)
-	//设置消息属性
-	if len(options.Properties) > 0 {
-		for k, v := range options.Properties {
-			msg.AddProperty(k, v)
-		}
-	}
-	//设置延迟时间（只有Delay类型topic可用）
-	if options.DeliveryTimestamp != nil {
-		msg.SetDelayTimestamp(*options.DeliveryTimestamp)
-	}
-	return msg
+type defaultClient struct {
+	Cfg      *rmq_client.Config
+	producer rmq_client.Producer
 }
 
-// todo 初始化生产者时参数化，可传入topic列表
-func (s *MqClient) initProducer(ctx context.Context, topicType TopicType, topic string, options *SendOptions) (producer rmq_client.Producer, err error) {
-	switch topicType {
-	case TopicNormal, TopicFIFO, TopicDelay:
-		producer, err = rmq_client.NewProducer(
-			&rmq_client.Config{
-				Endpoint:      s.endpoint,
-				NameSpace:     options.NameSpace,
-				ConsumerGroup: options.ConsumerGroup,
-				Credentials:   options.Credentials,
-			},
-			rmq_client.WithTopics(topic),
-			rmq_client.WithMaxAttempts(options.MaxAttempts),
-		)
-	case TopicTransaction:
-		producer, err = rmq_client.NewProducer(
-			&rmq_client.Config{
-				Endpoint:      s.endpoint,
-				NameSpace:     options.NameSpace,
-				ConsumerGroup: options.ConsumerGroup,
-				Credentials:   options.Credentials,
-			},
-			rmq_client.WithTopics(topic),
-			rmq_client.WithMaxAttempts(options.MaxAttempts),
-			rmq_client.WithTransactionChecker(&rmq_client.TransactionChecker{
-				Check: options.transactionChecker,
-			}),
-		)
+// StartProducer 启动生产者
+func (s *defaultClient) StartProducer(ctx context.Context, oFunc ...ProducerOptionFunc) error {
+	o := ProducerOptions{
+		MaxAttempts: 3,
 	}
-	return
-}
-
-//todo 提供手动销毁生产者的方法
-
-func (s *MqClient) send(ctx context.Context, topicType TopicType, topic string, options *SendOptions, producer rmq_client.Producer, message string) {
-	msg := s.initMsg(topic, message, options)
-
-	switch topicType {
-	case TopicNormal, TopicFIFO, TopicDelay:
-		//发送消息并根据结果回调对应方法
-		resp, err := producer.Send(ctx, msg)
-		if err != nil {
-			options.callFailedFunc(message, err)
-		} else {
-			options.callSuccessFunc(message, resp)
-		}
-	case TopicTransaction:
-		transaction := producer.BeginTransaction()
-		resp, err := producer.SendWithTransaction(ctx, msg, transaction)
-		if err != nil {
-			options.callFailedFunc(message, err)
-			return
-		}
-		//调用消息发送完毕的事务处理方法，成功（未定义处理方法也算成功）则提交事务，否则回滚事务
-		if options.callSendEndFunc(message, resp) {
-			err = transaction.Commit()
-		} else {
-			err = transaction.RollBack()
-		}
-		if err != nil {
-			options.callFailedFunc(message, err)
-		} else {
-			options.callSuccessFunc(message, resp)
-		}
-	}
-
-	return
-}
-
-// SendMsgs 发送消息，包括Normal、FIFO、Delay、Transaction。 todo 支持发送不同消息类型的消息，提升生产者的使用范围
-func (s *MqClient) SendMsgs(ctx context.Context, topicType TopicType, topic string, messages []string, sendOptionFunc ...SendOptionFunc) (err error) {
-	if len(messages) == 0 {
-		return
-	}
-	if strings.Trim(topic, "") == "" {
-		err = errors.New("topic不能为空")
-		return
-	}
-
-	//初始化可选项参数
-	o := defaultSendOption
 	options := &o
-	if len(sendOptionFunc) > 0 {
-		for _, f := range sendOptionFunc {
+	if len(oFunc) > 0 {
+		for _, f := range oFunc {
 			f(options)
 		}
 	}
 
-	switch topicType {
-	case TopicNormal:
-	case TopicFIFO:
-		if strings.Trim(options.MessageGroup, "") == "" {
-			err = errors.New("FIFO消息主题MessageGroup选项不能为空")
-			return
-		}
-	case TopicDelay:
-		if options.DeliveryTimestamp == nil {
-			err = errors.New("DELAY消息主题DeliveryTimestamp选项不能为空")
-			return
-		}
-	case TopicTransaction:
-		if options.transactionChecker == nil {
-			err = errors.New("事务消息主题transactionChecker选项不能为空")
-			return
-		}
-	}
-
-	//终端打印日志
-	os.Setenv("mq.consoleAppender.enabled", "true")
-	rmq_client.InitLogger()
-
-	//初始化生产者
-	producer, err := s.initProducer(ctx, topicType, topic, options)
+	producer, err := rmq_client.NewProducer(
+		s.Cfg,
+		rmq_client.WithTopics(options.Topics...),
+		rmq_client.WithMaxAttempts(options.MaxAttempts),
+		rmq_client.WithTransactionChecker(&rmq_client.TransactionChecker{
+			Check: options.transactionChecker,
+		}),
+	)
 	if err != nil {
-		return
+		return err
 	}
 	err = producer.Start()
 	if err != nil {
+		return err
+	}
+	s.producer = producer
+	return nil
+}
+
+// StopProducer 注销生产者
+func (s *defaultClient) StopProducer() error {
+	err := s.producer.GracefulStop()
+	s.producer = nil
+	return err
+}
+
+type Message struct {
+	Body              string            //消息内容，必填
+	Topic             string            //主题，必填
+	Tag               string            //标签，可选
+	MessageGroup      string            //消息组，FIFO消息类型必填，其他可选
+	Keys              []string          //索引列表，可选
+	Properties        map[string]string //自定义属性，可选
+	DeliveryTimestamp *time.Time        //延迟时间，Delay消息类型必填，其他可选
+}
+
+// initMsg 包装消息
+func initMsg(topicType TopicType, message Message) (msg *rmq_client.Message, err error) {
+	//校验
+	if strings.Trim(message.Topic, "") == "" {
+		err = errors.New("topic必填")
 		return
 	}
+	if strings.Trim(message.Body, "") == "" {
+		err = errors.New("body必填")
+		return
+	}
+	switch topicType {
+	case TopicFIFO:
+		if strings.Trim(message.MessageGroup, "") == "" {
+			err = errors.New("FIFO消息类型messageGroup必填")
+			return
+		}
+	case TopicDelay:
+		if message.DeliveryTimestamp == nil {
+			err = errors.New("Delay消息类型deliveryTimestamp必填")
+			return
+		}
+	}
 
-	// 优雅的关闭生产者
-	defer producer.GracefulStop()
-
-	for _, message := range messages {
-		s.send(ctx, topicType, topic, options, producer, message)
+	//初始化消息体
+	msg = &rmq_client.Message{
+		Topic: message.Topic,
+		Body:  []byte(message.Body),
+	}
+	//设置消息tag
+	if message.Tag != "" {
+		msg.SetTag(message.Tag)
+	}
+	//设置消息组（只有FIFO类型topic可用）
+	if message.MessageGroup != "" {
+		msg.SetMessageGroup(message.MessageGroup)
+	}
+	//设置消息key
+	msg.SetKeys(message.Keys...)
+	//设置消息属性
+	if len(message.Properties) > 0 {
+		for k, v := range message.Properties {
+			msg.AddProperty(k, v)
+		}
+	}
+	//设置延迟时间（只有Delay类型topic可用）
+	if message.DeliveryTimestamp != nil {
+		msg.SetDelayTimestamp(*message.DeliveryTimestamp)
 	}
 	return
 }
 
+// IsTooManyRequest 是否触发了流控
 func IsTooManyRequest(err error) bool {
 	//如果是重试失败，则判断是否设置了补偿机制，有则调用
 	if e, ok := err.(*rmq_client.ErrRpcStatus); ok && e.GetCode() == int32(v2.Code_TOO_MANY_REQUESTS) {
 		return true
 	}
 	return false
+}
+
+// Send 同步发送消息
+// 可支持普通、延迟、顺序类型的消息，不支持事务消息
+func (s *defaultClient) Send(ctx context.Context, topicType TopicType, msg Message) (resp []*rmq_client.SendReceipt, err error) {
+	if s.producer == nil {
+		return nil, errors.New("请先初始化生产者")
+	}
+
+	if topicType == TopicTransaction {
+		return nil, errors.New("此方法不支持发送Transaction消息")
+	}
+
+	message, err := initMsg(topicType, msg)
+	if err != nil {
+		return
+	}
+
+	resp, err = s.producer.Send(ctx, message)
+	return
+}
+
+type SendAsyncDealFunc func(ctx context.Context, msg Message, resp []*rmq_client.SendReceipt, err error)
+
+// SendAsync 异步发送消息
+// 可支持普通、延迟、顺序类型的消息，不支持事务消息
+func (s *defaultClient) SendAsync(ctx context.Context, topicType TopicType, msg Message, dealFunc SendAsyncDealFunc) error {
+	if s.producer == nil {
+		return errors.New("请先初始化生产者")
+	}
+
+	if dealFunc == nil {
+		return errors.New("dealFunc必填")
+	}
+
+	if topicType == TopicTransaction {
+		return errors.New("此方法不支持发送Transaction消息")
+	}
+
+	message, err := initMsg(topicType, msg)
+	if err != nil {
+		return err
+	}
+
+	s.producer.SendAsync(ctx, message, func(ctx context.Context, receipts []*rmq_client.SendReceipt, err error) {
+		dealFunc(ctx, msg, receipts, err)
+	})
+	return nil
+}
+
+// ConfirmFunc 二次确认方法
+// 注意：不要异步处理，本地事务逻辑提交时返回true，否则返回false
+type ConfirmFunc func(msg Message, resp []*rmq_client.SendReceipt) bool
+
+// SendTransaction 发送事务消息
+// 注意：事务消息的生产者不能和其他类型消息的生产者共用
+func (s *defaultClient) SendTransaction(ctx context.Context, message Message, confirmFunc ConfirmFunc) error {
+	if s.producer == nil {
+		return errors.New("请先初始化生产者")
+	}
+
+	if confirmFunc == nil {
+		return errors.New("confirmFunc必填")
+	}
+
+	msg, err := initMsg(TopicTransaction, message)
+	if err != nil {
+		return err
+	}
+
+	transaction := s.producer.BeginTransaction()
+	resp, err := s.producer.SendWithTransaction(ctx, msg, transaction)
+	if err != nil {
+		return err
+	}
+	if confirmFunc(message, resp) {
+		return transaction.Commit()
+	}
+	return transaction.RollBack()
+}
+
+type ConsumerOptionFunc func(options *ConsumerOptions)
+
+func WithConsumerOptionAwaitDuration(AwaitDuration time.Duration) ConsumerOptionFunc {
+	return func(o *ConsumerOptions) {
+		o.AwaitDuration = AwaitDuration
+	}
+}
+
+type ConsumerOptions struct {
+	AwaitDuration     time.Duration                           //消息处理超时时间，超时会触发消费重试
+	MaxMessageNum     int32                                   //每次接收的消息数量
+	InvisibleDuration time.Duration                           //接收到的消息的不可见时间
+	SubExpressions    map[string]*rmq_client.FilterExpression //订阅表达式，key为topic，简单消费类型只支持tag和sql匹配
+}
+
+// ConsumeFunc 消费方法
+// 方法内消费成功时需要调用consumer.Ack()；
+// 消费时间可能超过消费者MaxMessageNum设置的时间时，可调用consumer.ChangeInvisibleDuration()或consumer.ChangeInvisibleDurationAsync()方法调整消息消费超时时间；
+type ConsumeFunc func(ctx context.Context, msg *rmq_client.MessageView, consumer rmq_client.SimpleConsumer) bool
+
+// SimpleConsume 简单消费类型消费
+func (s *defaultClient) SimpleConsume(ctx context.Context, consumeFunc ConsumeFunc, oFunc ...ConsumerOptionFunc) error {
+	o := ConsumerOptions{
+		AwaitDuration: time.Second * 5,
+		MaxMessageNum: 10,
+	}
+	options := &o
+	if len(oFunc) > 0 {
+		for _, f := range oFunc {
+			f(options)
+		}
+	}
+
+	consumer, err := rmq_client.NewSimpleConsumer(
+		s.Cfg,
+		rmq_client.WithAwaitDuration(options.AwaitDuration),
+		rmq_client.WithSubscriptionExpressions(options.SubExpressions),
+	)
+	if err != nil {
+		return err
+	}
+
+	err = consumer.Start()
+	if err != nil {
+		return err
+	}
+
+	// 优雅的停止
+	defer consumer.GracefulStop()
+
+	for {
+		mvs, err1 := consumer.Receive(ctx, options.MaxMessageNum, options.InvisibleDuration)
+		if err1 != nil {
+			return err1
+		}
+		for _, mv := range mvs {
+			consumeFunc(ctx, mv, consumer)
+		}
+	}
 }
