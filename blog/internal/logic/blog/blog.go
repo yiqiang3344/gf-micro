@@ -139,6 +139,8 @@ func (s *sBlog) Delete(ctx context.Context, id uint64) (err error) {
 	return
 }
 
+const BatDeleteTopic = "blog_bat_delete"
+
 func (s *sBlog) BatDelete(ctx context.Context, ids []uint64) (batNo string, err error) {
 	defer func() {
 		if e := recover(); e != nil {
@@ -155,20 +157,26 @@ func (s *sBlog) BatDelete(ctx context.Context, ids []uint64) (batNo string, err 
 		}
 	}()
 
-	var topic = "blog_bat_delete"
-
 	//写入消息队列
-	mqClient := rocketmq_client.GetClient(&rocketmq_client.ClientCfg{
+	mqClient, err := rocketmq_client.GetClient(&rocketmq_client.ClientCfg{
 		Endpoint:     g.Cfg().MustGet(ctx, "rocketmq.endpoint").String(),
 		NameSpace:    g.Cfg().MustGet(ctx, "rocketmq.namespace").String(),
 		AccessKey:    g.Cfg().MustGet(ctx, "rocketmq.accessKey").String(),
 		AccessSecret: g.Cfg().MustGet(ctx, "rocketmq.accessSecret").String(),
 		LogPath:      g.Cfg().MustGet(ctx, "rocketmq.logPath").String(),
 		LogStdout:    g.Cfg().MustGet(ctx, "rocketmq.logStdout").Bool(),
+		Debug:        g.Cfg().MustGet(ctx, "rocketmq.debug").Bool(),
+		DebugHandlerFunc: func(msg string) {
+			g.Log().Debug(ctx, msg)
+		},
 	})
+	if err != nil {
+		g.Log().Debugf(ctx, "消息队列客户端初始化失败：%+v", err)
+		return
+	}
 	err = mqClient.StartProducer(
 		ctx,
-		rocketmq_client.WithProducerOptionTopics([]string{topic}),
+		rocketmq_client.WithProducerOptionTopics([]string{BatDeleteTopic}),
 		rocketmq_client.WithProducerOptionMaxAttempts(2),
 	)
 	if err != nil {
@@ -180,52 +188,59 @@ func (s *sBlog) BatDelete(ctx context.Context, ids []uint64) (batNo string, err 
 
 	defer mqClient.StopProducer()
 	for _, id := range ids {
-		res, err1 := mqClient.Send(ctx, rocketmq_client.TopicNormal, rocketmq_client.Message{
-			Topic: topic,
+		_, err1 := mqClient.Send(ctx, rocketmq_client.TopicNormal, rocketmq_client.Message{
+			Topic: BatDeleteTopic,
 			Keys: []string{
 				batNo,
 			},
 			Body: gconv.String(id),
 		})
 		if err1 != nil {
-			g.Log().Debugf(ctx, "删除博客[%d]消息队列生产失败：%v", id, err1)
+			g.Log().Debugf(ctx, "删除博客[%d]消息队列生产失败:%v", id, err1)
 		} else {
 			g.Log().Debugf(ctx, "删除博客[%d]消息队列生产成功", id)
-			g.Dump(res)
 		}
 	}
 
 	return
 }
 
+const BatDeleteConsumerGroup = "blog_bat_delete_consumer"
+
 // BatDeleteConsumer 删除博客消费逻辑
-func (s *sBlog) BatDeleteConsumer(ctx context.Context) error {
-	mqClient := rocketmq_client.GetClient(&rocketmq_client.ClientCfg{
+func (s *sBlog) BatDeleteConsumer(ctx context.Context) (stopFunc func(), err error) {
+	mqClient, err := rocketmq_client.GetClient(&rocketmq_client.ClientCfg{
 		Endpoint:      g.Cfg().MustGet(ctx, "rocketmq.endpoint").String(),
 		NameSpace:     g.Cfg().MustGet(ctx, "rocketmq.namespace").String(),
 		AccessKey:     g.Cfg().MustGet(ctx, "rocketmq.accessKey").String(),
 		AccessSecret:  g.Cfg().MustGet(ctx, "rocketmq.accessSecret").String(),
-		ConsumerGroup: "blog_bat_delete_consumer",
+		ConsumerGroup: BatDeleteConsumerGroup,
 		LogPath:       g.Cfg().MustGet(ctx, "rocketmq.logPath").String(),
 		LogStdout:     g.Cfg().MustGet(ctx, "rocketmq.logStdout").Bool(),
+		Debug:         g.Cfg().MustGet(ctx, "rocketmq.debug").Bool(),
+		DebugHandlerFunc: func(msg string) {
+			g.Log().Debug(ctx, msg)
+		},
 	})
-	err := mqClient.SimpleConsume(
+	if err != nil {
+		g.Log().Debugf(ctx, "消息队列客户端初始化失败：%v", err)
+		return nil, gerror.NewCodef(gcode.CodeInternalError, "消息队列客户端初始化失败:%v", err)
+	}
+	stopFunc, err = mqClient.SimpleConsume(
 		ctx,
 		func(ctx context.Context, msg *rmq_client.MessageView, consumer rmq_client.SimpleConsumer) {
 			id := string(msg.GetBody())
-			_, err := dao.Blog.Ctx(ctx).Where(do.Blog{
+			_, err1 := dao.Blog.Ctx(ctx).Where(do.Blog{
 				Id: id,
 			}).Delete()
 			//todo 更新进度
-			if err != nil {
-				g.Log().Debugf(ctx, "删除博客[%s]失败:%s", id, err.Error())
+			if err1 != nil {
+				g.Log().Debugf(ctx, "删除博客[%s]失败:%s", id, err1)
 				return
-			} else {
-				g.Log().Debugf(ctx, "删除博客[%s]成功", id)
 			}
-			err = consumer.Ack(ctx, msg)
-			if err != nil {
-				g.Log().Debugf(ctx, "删除博客ACK[%s]失败:%s", id, err.Error())
+			err1 = consumer.Ack(ctx, msg)
+			if err1 != nil {
+				g.Log().Debugf(ctx, "删除博客ACK[%s]失败:%s", id, err1)
 			} else {
 				g.Log().Debugf(ctx, "删除博客ACK[%s]成功", id)
 			}
@@ -234,13 +249,13 @@ func (s *sBlog) BatDeleteConsumer(ctx context.Context) error {
 		rocketmq_client.WithConsumerOptionAwaitDuration(5*time.Second),
 		rocketmq_client.WithConsumerOptionInvisibleDuration(10*time.Second),
 		rocketmq_client.WithConsumerOptionSubExpressions(map[string]*rmq_client.FilterExpression{
-			"blog_bat_delete": rmq_client.SUB_ALL,
+			BatDeleteTopic: rmq_client.SUB_ALL,
 		}),
 	)
 	if err != nil {
-		return gerror.NewCodef(gcode.CodeInternalError, "消费异常:%v", err)
+		return nil, gerror.NewCodef(gcode.CodeInternalError, "消费异常:%v", err)
 	}
-	return nil
+	return
 }
 
 func (s *sBlog) GetBatDeleteStatus(ctx context.Context, batNo string) (status string, err error) {

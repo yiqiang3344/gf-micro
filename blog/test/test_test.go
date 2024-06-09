@@ -133,7 +133,7 @@ func TestBatDelete(t *testing.T) {
 			ctx = gctx.GetInitCtx()
 		)
 		ret, err := blogClient.BatDelete(ctx, &v1.BatDeleteReq{
-			Ids: []uint64{3, 4},
+			Ids: []uint64{3, 4, 5, 6, 7, 8, 9, 10},
 		})
 		gtest.Assert(err, "")
 		gtest.AssertNE(ret.BatNo, "")

@@ -7,11 +7,12 @@ import (
 	"github.com/gogf/gf/contrib/trace/otlpgrpc/v2"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcfg"
+	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v2/os/gproc"
+	"os"
 	"yijunqiang/gf-micro/blog/internal/logging"
 	"yijunqiang/gf-micro/blog/internal/service"
-
-	"github.com/gogf/gf/v2/os/gcmd"
 )
 
 var (
@@ -35,14 +36,18 @@ var (
 			if err != nil {
 				g.Log().Fatal(ctx, err)
 			}
-			defer shutdown()
 
-			err = service.Blog().BatDeleteConsumer(ctx)
+			stopFunc, err := service.Blog().BatDeleteConsumer(ctx)
 			if err != nil {
 				g.Log("debug").Errorf(ctx, "batDeleteBlogConsumer异常:%+v", err)
 			}
 
-			return nil
+			gproc.AddSigHandlerShutdown(func(sig os.Signal) {
+				stopFunc()
+				shutdown()
+			})
+			gproc.Listen()
+			return
 		},
 	}
 )
