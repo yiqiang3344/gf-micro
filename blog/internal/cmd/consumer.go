@@ -7,25 +7,18 @@ import (
 	"github.com/gogf/gf/contrib/trace/otlpgrpc/v2"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcfg"
-	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/os/glog"
-	"google.golang.org/grpc"
 	"yijunqiang/gf-micro/blog/internal/logging"
+	"yijunqiang/gf-micro/blog/internal/service"
 
-	"yijunqiang/gf-micro/blog/internal/controller/blog"
+	"github.com/gogf/gf/v2/os/gcmd"
 )
 
 var (
-	Main = gcmd.Command{
-		Name:        "main",
-		Usage:       "main",
-		Brief:       "博客服务管理工具",
-		Description: `功能包括：微服务启动，消费者启动等`,
-	}
-	microServer = &gcmd.Command{
-		Name:  "start",
-		Usage: "./main start",
-		Brief: "启动微服务",
+	batDeleteBlogConsumer = &gcmd.Command{
+		Name:  "batDeleteBlogConsumer",
+		Usage: "./main batDeleteBlogConsumer",
+		Brief: "批量删除博客的消费者",
 		Func: func(ctx context.Context, parser *gcmd.Parser) (err error) {
 			// grpc服务注册发现
 			grpcx.Resolver.Register(etcd.New(gcfg.Instance().MustGet(ctx, "registry.etcd").String()))
@@ -44,24 +37,12 @@ var (
 			}
 			defer shutdown()
 
-			c := grpcx.Server.NewConfig()
-			c.Options = append(c.Options, []grpc.ServerOption{
-				grpcx.Server.ChainUnary(
-					grpcx.Server.UnaryValidate,
-					logging.UnaryLogger,
-				)}...,
-			)
-			s := grpcx.Server.New(c)
-			blog.Register(s)
-			s.Run()
+			err = service.Blog().BatDeleteConsumer(ctx)
+			if err != nil {
+				g.Log("debug").Errorf(ctx, "batDeleteBlogConsumer异常:%+v", err)
+			}
+
 			return nil
 		},
 	}
 )
-
-func init() {
-	err := Main.AddCommand(microServer, batDeleteBlogConsumer)
-	if err != nil {
-		panic(err)
-	}
-}

@@ -91,3 +91,7 @@ otlp:
 # 服务注册发现
 registry:
   etcd: "127.0.0.1:2379"
+
+# rocketmq
+rocketmq:
+  endpoint: "127.0.0.1:8081"

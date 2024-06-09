@@ -4,7 +4,10 @@ import (
 	"context"
 	"errors"
 	rmq_client "github.com/apache/rocketmq-clients/golang/v5"
+	"github.com/apache/rocketmq-clients/golang/v5/credentials"
 	v2 "github.com/apache/rocketmq-clients/golang/v5/protocol/v2"
+	"github.com/gogf/gf/v2/frame/g"
+	"os"
 	"strings"
 	"time"
 )
@@ -28,10 +31,43 @@ type Client interface {
 	SimpleConsume(ctx context.Context, consumeFuc ConsumeFunc, oFunc ...ConsumerOptionFunc) error           //简单模式消费消息
 }
 
+type ClientCfg struct {
+	Endpoint      string
+	NameSpace     string
+	ConsumerGroup string
+	AccessKey     string
+	AccessSecret  string
+	LogPath       string
+	LogStdout     bool
+}
+
 // GetClient 获取mq客户端
-func GetClient(cfg *rmq_client.Config) Client {
+func GetClient(cfg *ClientCfg) Client {
+	if cfg.LogStdout {
+		os.Setenv("mq.consoleAppender.enabled", "true")
+	} else {
+		os.Setenv("mq.consoleAppender.enabled", "false")
+	}
+	os.Setenv("rocketmq.client.logRoot", cfg.LogPath)
+	rmq_client.ResetLogger()
+
 	return &defaultClient{
-		Cfg: cfg,
+		Cfg: &rmq_client.Config{
+			Endpoint:      cfg.Endpoint,
+			NameSpace:     cfg.NameSpace,
+			ConsumerGroup: cfg.ConsumerGroup,
+			Credentials: &credentials.SessionCredentials{
+				AccessKey:     cfg.AccessKey,
+				AccessSecret:  cfg.AccessSecret,
+				SecurityToken: "",
+			},
+		},
+	}
+}
+
+func WithProducerOptionTopics(Topics []string) ProducerOptionFunc {
+	return func(o *ProducerOptions) {
+		o.Topics = Topics
 	}
 }
 
@@ -111,7 +147,7 @@ type Message struct {
 }
 
 // initMsg 包装消息
-func initMsg(topicType TopicType, message Message) (msg *rmq_client.Message, err error) {
+func initMsg(ctx context.Context, topicType TopicType, message Message) (msg *rmq_client.Message, err error) {
 	//校验
 	if strings.Trim(message.Topic, "") == "" {
 		err = errors.New("topic必填")
@@ -150,6 +186,7 @@ func initMsg(topicType TopicType, message Message) (msg *rmq_client.Message, err
 	//设置消息key
 	msg.SetKeys(message.Keys...)
 	//设置消息属性
+	// todo 添加trace_id
 	if len(message.Properties) > 0 {
 		for k, v := range message.Properties {
 			msg.AddProperty(k, v)
@@ -181,14 +218,13 @@ func (s *defaultClient) Send(ctx context.Context, topicType TopicType, msg Messa
 	if topicType == TopicTransaction {
 		return nil, errors.New("此方法不支持发送Transaction消息")
 	}
-
-	message, err := initMsg(topicType, msg)
+	message, err := initMsg(ctx, topicType, msg)
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	resp, err = s.producer.Send(ctx, message)
-	return
+	return resp, err
 }
 
 type SendAsyncDealFunc func(ctx context.Context, msg Message, resp []*rmq_client.SendReceipt, err error)
@@ -208,7 +244,7 @@ func (s *defaultClient) SendAsync(ctx context.Context, topicType TopicType, msg 
 		return errors.New("此方法不支持发送Transaction消息")
 	}
 
-	message, err := initMsg(topicType, msg)
+	message, err := initMsg(ctx, topicType, msg)
 	if err != nil {
 		return err
 	}
@@ -234,7 +270,7 @@ func (s *defaultClient) SendTransaction(ctx context.Context, message Message, co
 		return errors.New("confirmFunc必填")
 	}
 
-	msg, err := initMsg(TopicTransaction, message)
+	msg, err := initMsg(ctx, TopicTransaction, message)
 	if err != nil {
 		return err
 	}
@@ -258,6 +294,24 @@ func WithConsumerOptionAwaitDuration(AwaitDuration time.Duration) ConsumerOption
 	}
 }
 
+func WithConsumerOptionMaxMessageNum(MaxMessageNum int32) ConsumerOptionFunc {
+	return func(o *ConsumerOptions) {
+		o.MaxMessageNum = MaxMessageNum
+	}
+}
+
+func WithConsumerOptionInvisibleDuration(InvisibleDuration time.Duration) ConsumerOptionFunc {
+	return func(o *ConsumerOptions) {
+		o.InvisibleDuration = InvisibleDuration
+	}
+}
+
+func WithConsumerOptionSubExpressions(SubExpressions map[string]*rmq_client.FilterExpression) ConsumerOptionFunc {
+	return func(o *ConsumerOptions) {
+		o.SubExpressions = SubExpressions
+	}
+}
+
 type ConsumerOptions struct {
 	AwaitDuration     time.Duration                           //消息处理超时时间，超时会触发消费重试
 	MaxMessageNum     int32                                   //每次接收的消息数量
@@ -268,19 +322,25 @@ type ConsumerOptions struct {
 // ConsumeFunc 消费方法
 // 方法内消费成功时需要调用consumer.Ack()；
 // 消费时间可能超过消费者MaxMessageNum设置的时间时，可调用consumer.ChangeInvisibleDuration()或consumer.ChangeInvisibleDurationAsync()方法调整消息消费超时时间；
-type ConsumeFunc func(ctx context.Context, msg *rmq_client.MessageView, consumer rmq_client.SimpleConsumer) bool
+type ConsumeFunc func(ctx context.Context, msg *rmq_client.MessageView, consumer rmq_client.SimpleConsumer)
 
 // SimpleConsume 简单消费类型消费
-func (s *defaultClient) SimpleConsume(ctx context.Context, consumeFunc ConsumeFunc, oFunc ...ConsumerOptionFunc) error {
+func (s *defaultClient) SimpleConsume(ctx context.Context, consumeFunc ConsumeFunc, oFunc ...ConsumerOptionFunc) (err error) {
 	o := ConsumerOptions{
-		AwaitDuration: time.Second * 5,
-		MaxMessageNum: 10,
+		AwaitDuration:     time.Second * 5,
+		MaxMessageNum:     10,
+		InvisibleDuration: time.Second * 5,
 	}
 	options := &o
 	if len(oFunc) > 0 {
 		for _, f := range oFunc {
 			f(options)
 		}
+	}
+
+	if len(options.SubExpressions) == 0 {
+		err = errors.New("SubExpressions不能为空")
+		return
 	}
 
 	consumer, err := rmq_client.NewSimpleConsumer(
@@ -303,7 +363,10 @@ func (s *defaultClient) SimpleConsume(ctx context.Context, consumeFunc ConsumeFu
 	for {
 		mvs, err1 := consumer.Receive(ctx, options.MaxMessageNum, options.InvisibleDuration)
 		if err1 != nil {
-			return err1
+			g.Log().Debugf(ctx, "获取消息失败:%v", err1.Error())
+			time.Sleep(1 * time.Second)
+		} else {
+			g.Log().Debugf(ctx, "获取消息成功，数量:%d", len(mvs))
 		}
 		for _, mv := range mvs {
 			consumeFunc(ctx, mv, consumer)
