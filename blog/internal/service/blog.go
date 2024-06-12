@@ -19,7 +19,6 @@ type (
 		GetList(ctx context.Context) (list []*pbentity.Blog, err error)
 		Delete(ctx context.Context, id uint64) (err error)
 		BatDelete(ctx context.Context, ids []uint64) (batNo string, err error)
-		// BatDeleteConsumer 删除博客消费逻辑
 		BatDeleteConsumer(ctx context.Context) (stopFunc func(), err error)
 		GetBatDeleteStatus(ctx context.Context, batNo string) (status string, err error)
 	}

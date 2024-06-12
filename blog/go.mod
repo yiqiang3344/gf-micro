@@ -5,12 +5,14 @@ go 1.21
 //toolchain go1.22.3
 
 require (
+	github.com/apache/rocketmq-clients/golang/v5 v5.1.1-rc1
 	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.7.1
 	github.com/gogf/gf/contrib/registry/etcd/v2 v2.7.1
 	github.com/gogf/gf/contrib/rpc/grpcx/v2 v2.7.1
 	github.com/gogf/gf/contrib/trace/otlpgrpc/v2 v2.7.1
 	github.com/gogf/gf/v2 v2.7.1
 	github.com/yiqiang3344/gcfg-apollo v1.1.0
+	github.com/yiqiang3344/rocketmq-client-go v0.0.0-00010101000000-000000000000
 	google.golang.org/grpc v1.64.0
 	google.golang.org/protobuf v1.34.1
 )
@@ -19,7 +21,6 @@ require (
 	contrib.go.opencensus.io/exporter/ocagent v0.7.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/BurntSushi/toml v1.4.0 // indirect
-	github.com/apache/rocketmq-clients/golang/v5 v5.1.1-rc1 // indirect
 	github.com/apolloconfig/agollo/v4 v4.3.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/census-instrumentation/opencensus-proto v0.4.1 // indirect
@@ -91,5 +92,7 @@ require (
 )
 
 replace yijunqiang/gf-micro/blog => ../blog
+
+replace github.com/yiqiang3344/rocketmq-client-go => ../../rocketmq-client-go
 
 replace github.com/gogf/gf/v2 v2.7.1 => ../../gf
