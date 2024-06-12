@@ -34,15 +34,18 @@ var (
 			glog.SetDefaultHandler(logging.HandlerJson)
 
 			// 链路追踪初始化
-			shutdown, err := otlpgrpc.Init(
-				gcfg.Instance().MustGet(ctx, "appName").String(),
-				gcfg.Instance().MustGet(ctx, "otlp.endpoint").String(),
-				gcfg.Instance().MustGet(ctx, "otlp.traceToken").String(),
-			)
-			if err != nil {
-				g.Log().Fatal(ctx, err)
+			if !gcfg.Instance().MustGet(ctx, "otlp").IsNil() {
+				shutdown, err := otlpgrpc.Init(
+					gcfg.Instance().MustGet(ctx, "appName").String(),
+					gcfg.Instance().MustGet(ctx, "otlp.endpoint").String(),
+					gcfg.Instance().MustGet(ctx, "otlp.traceToken").String(),
+				)
+				if err != nil {
+					g.Log().Debugf(ctx, "otlp初始化失败:%v\n", err)
+				} else {
+					defer shutdown()
+				}
 			}
-			defer shutdown()
 
 			c := grpcx.Server.NewConfig()
 			c.Options = append(c.Options, []grpc.ServerOption{

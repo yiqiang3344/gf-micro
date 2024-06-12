@@ -15,7 +15,7 @@ func main() {
 	ctx := gctx.New()
 
 	//配置中心
-	if gcfg.Instance().MustGet(ctx, "apollo") != nil {
+	if !gcfg.Instance().MustGet(ctx, "apollo").IsNil() {
 		adapter, err := gcfg_apollo.CreateAdapterApollo(ctx)
 		if err != nil {
 			panic(err)
