@@ -1,4 +1,4 @@
-package blogV1
+package t2blogV1
 
 import (
 	"github.com/gogf/gf/v2/encoding/gjson"

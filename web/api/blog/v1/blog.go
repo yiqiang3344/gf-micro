@@ -53,7 +53,7 @@ type BlogBatDeleteRes struct {
 }
 
 type BlogGetBatDeleteStatusReq struct {
-	g.Meta `path:"/blog/get-bat-delete-status" tags:"Blog" method:"post" summary:"博客/获取批量删除状态"`
+	g.Meta `path:"/blog/get-bat-delete-status" tags:"Blog" method:"get,post" summary:"博客/获取批量删除状态"`
 	BatNo  string `json:"batNo" v:"required#批次号不能为空" dc:"批次号"`
 }
 type BlogGetBatDeleteStatusRes struct {

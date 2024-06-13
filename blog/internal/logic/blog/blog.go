@@ -2,8 +2,10 @@ package blog
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	rmq_client "github.com/apache/rocketmq-clients/golang/v5"
+	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -19,6 +21,7 @@ import (
 	"yijunqiang/gf-micro/blog/internal/model/do"
 	"yijunqiang/gf-micro/blog/internal/model/entity"
 	"yijunqiang/gf-micro/blog/internal/service"
+	"yijunqiang/gf-micro/blog/internal/utility/mcache"
 )
 
 type (
@@ -27,15 +30,6 @@ type (
 
 func init() {
 	service.RegisterBlog(&sBlog{})
-}
-
-func getDbCacheFullKey(table string, key string) string {
-	//gf/database/gdb/gdb.go:386中有定义缓存前缀，但没开放出来
-	return fmt.Sprintf("SelectCache:%s@%s", table, key)
-}
-
-func getDbCacheKey(table string, key string) string {
-	return fmt.Sprintf("%s@%s", table, key)
 }
 
 func (s *sBlog) Create(ctx context.Context, title string, content string, nickname string) (blog *entity.Blog, err error) {
@@ -64,7 +58,7 @@ func (s *sBlog) Create(ctx context.Context, title string, content string, nickna
 	//清除缓存
 	_, err = g.DB().GetCache().Remove(
 		ctx,
-		getDbCacheFullKey(dao.Blog.Table(), "GetList"),
+		mcache.GetDbCacheFullKey(dao.Blog.Table(), "GetList"),
 	)
 	return
 }
@@ -107,8 +101,8 @@ func (s *sBlog) Edit(ctx context.Context, id uint64, title string, content strin
 	//清除缓存
 	_, err = g.DB().GetCache().Remove(
 		ctx,
-		getDbCacheFullKey(dao.Blog.Table(), fmt.Sprintf("GetById:%d", id)),
-		getDbCacheFullKey(dao.Blog.Table(), "GetList"),
+		mcache.GetDbCacheFullKey(dao.Blog.Table(), fmt.Sprintf("GetById:%d", id)),
+		mcache.GetDbCacheFullKey(dao.Blog.Table(), "GetList"),
 	)
 	if err != nil {
 		return
@@ -120,7 +114,7 @@ func (s *sBlog) GetById(ctx context.Context, id uint64) (ret *pbentity.Blog, err
 	var blog *entity.Blog
 	err = dao.Blog.Ctx(ctx).Cache(gdb.CacheOption{
 		Duration: time.Hour,
-		Name:     getDbCacheKey(dao.Blog.Table(), fmt.Sprintf("GetById:%d", id)),
+		Name:     mcache.GetDbCacheKey(dao.Blog.Table(), fmt.Sprintf("GetById:%d", id)),
 	}).Where(do.Blog{
 		Id: id,
 	}).Scan(&blog)
@@ -140,7 +134,7 @@ func (s *sBlog) GetList(ctx context.Context) (list []*pbentity.Blog, err error) 
 	var listRet []entity.Blog
 	err = dao.Blog.Ctx(ctx).Cache(gdb.CacheOption{
 		Duration: time.Hour,
-		Name:     getDbCacheKey(dao.Blog.Table(), "GetList"),
+		Name:     mcache.GetDbCacheKey(dao.Blog.Table(), "GetList"),
 	}).Scan(&listRet)
 	if err != nil {
 		return
@@ -187,8 +181,8 @@ func (s *sBlog) Delete(ctx context.Context, id uint64) (err error) {
 	//清除缓存
 	_, err = g.DB().GetCache().Remove(
 		ctx,
-		getDbCacheFullKey(dao.Blog.Table(), fmt.Sprintf("GetById:%d", id)),
-		getDbCacheFullKey(dao.Blog.Table(), "GetList"),
+		mcache.GetDbCacheFullKey(dao.Blog.Table(), fmt.Sprintf("GetById:%d", id)),
+		mcache.GetDbCacheFullKey(dao.Blog.Table(), "GetList"),
 	)
 	if err != nil {
 		return
@@ -197,6 +191,10 @@ func (s *sBlog) Delete(ctx context.Context, id uint64) (err error) {
 }
 
 const BatDeleteTopic = "blog_bat_delete"
+
+func getBatDeleteProgressKey(batNo string) string {
+	return fmt.Sprintf("progress:BatDelete:%s", batNo)
+}
 
 func (s *sBlog) BatDelete(ctx context.Context, ids []uint64) (batNo string, err error) {
 	defer func() {
@@ -213,7 +211,6 @@ func (s *sBlog) BatDelete(ctx context.Context, ids []uint64) (batNo string, err 
 			}.Log(ctx)
 		}
 	}()
-	batNo = guid.S()
 
 	//写入消息队列
 	producer, err := rocketmq_client.GetGfProducer(
@@ -237,13 +234,27 @@ func (s *sBlog) BatDelete(ctx context.Context, ids []uint64) (batNo string, err 
 		return
 	}
 	defer producer.Stop()
-	for _, id := range ids {
+
+	//生成批次号，及初始化进度信息
+	batNo = guid.S()
+	idsMap := gmap.NewListMap()
+	for _, v := range ids {
+		idsMap.Set(v, 1)
+	}
+	err = g.Redis().SetEX(ctx, getBatDeleteProgressKey(batNo), idsMap.Size(), int64(time.Hour.Seconds()))
+	if err != nil {
+		return
+	}
+	for id, _ := range idsMap.Keys() {
 		_, err1 := producer.Send(ctx, rocketmq_client.TopicNormal, rocketmq_client.Message{
 			Topic: BatDeleteTopic,
 			Keys: []string{
 				batNo,
 			},
 			Body: gconv.String(id),
+			Properties: map[string]string{
+				"batNo": batNo,
+			},
 		})
 		if err1 != nil {
 			g.Log().Debugf(ctx, "删除博客[%d]消息队列生产失败:%v", id, err1)
@@ -282,16 +293,29 @@ func (s *sBlog) BatDeleteConsumer(ctx context.Context) (stopFunc func(), err err
 				g.Log().Debugf(ctx, "删除博客[%s]失败:%s", id, err1)
 				return err1
 			}
-			//todo 更新进度
 			//清除缓存
 			_, err1 = g.DB().GetCache().Remove(
 				ctx,
-				getDbCacheFullKey(dao.Blog.Table(), fmt.Sprintf("GetById:%s", id)),
-				getDbCacheFullKey(dao.Blog.Table(), "GetList"),
+				mcache.GetDbCacheFullKey(dao.Blog.Table(), fmt.Sprintf("GetById:%s", id)),
+				mcache.GetDbCacheFullKey(dao.Blog.Table(), "GetList"),
 			)
 			if err1 != nil {
+				g.Log().Debugf(ctx, "博客[%s]清除缓存失败:%s", id, err1)
 				return err1
 			}
+			//更新进度
+			batNo, ok := msg.GetProperties()["batNo"]
+			if !ok {
+				err1 = errors.New("batNo不存在")
+				g.Log().Debugf(ctx, "删除博客[%s]失败:%s", id, err1)
+				return err1
+			}
+			ret, err1 := g.Redis().Decr(ctx, getBatDeleteProgressKey(batNo))
+			if err1 != nil {
+				g.Log().Debugf(ctx, "删除博客[%s]失败:%s", id, err1)
+				return err1
+			}
+			g.Log().Debugf(ctx, "[%s]删除博客进度:剩余[%d]", batNo, ret)
 			err1 = consumer.Ack(ctx)
 			if err1 != nil {
 				g.Log().Debugf(ctx, "删除博客ACK[%s]失败:%s", id, err1)
@@ -314,16 +338,17 @@ func (s *sBlog) BatDeleteConsumer(ctx context.Context) (stopFunc func(), err err
 }
 
 func (s *sBlog) GetBatDeleteStatus(ctx context.Context, batNo string) (status string, err error) {
-	// todo 获取进度
-	status = ""
-	switch batNo {
-	case "bat1":
-		status = "success"
-	case "bat2":
-		status = "pending"
-	default:
-		err = gerror.NewCode(gcode.CodeBusinessValidationFailed, "batNo不存在")
+	ret, err := g.Redis().Get(ctx, getBatDeleteProgressKey(batNo))
+	if err != nil {
 		return
+	}
+	if ret.IsNil() {
+		err = gerror.NewCode(gcode.CodeBusinessValidationFailed, "批次不存在或已超过有效期")
+		return
+	}
+	status = "pending"
+	if ret.Int() <= 0 {
+		status = "success"
 	}
 	return
 }

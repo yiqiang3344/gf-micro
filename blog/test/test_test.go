@@ -144,11 +144,10 @@ func TestGetBatDeleteStatus(t *testing.T) {
 		var (
 			ctx = gctx.GetInitCtx()
 		)
-		ret, err := blogClient.GetBatDeleteStatus(ctx, &v1.GetBatDeleteStatusReq{
+		_, err := blogClient.GetBatDeleteStatus(ctx, &v1.GetBatDeleteStatusReq{
 			BatNo: "bat1",
 		})
-		gtest.Assert(err, "")
-		gtest.Assert(ret.Status, "success")
+		gtest.Assert(err.Error(), "批次不存在或已超过有效期")
 	})
 }
 

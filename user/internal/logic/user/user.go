@@ -2,12 +2,17 @@ package user
 
 import (
 	"context"
+	"fmt"
+	"github.com/gogf/gf/v2/crypto/gmd5"
+	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/util/gconv"
+	"time"
 	"yijunqiang/gf-micro/user/internal/logging"
 	"yijunqiang/gf-micro/user/internal/model/entity"
+	"yijunqiang/gf-micro/user/internal/utility/mcache"
 
 	"yijunqiang/gf-micro/user/api/pbentity"
 	"yijunqiang/gf-micro/user/internal/dao"
@@ -64,7 +69,10 @@ func (s *sUser) Login(ctx context.Context, nickname string, password string) (to
 			}.Log(ctx)
 		}
 	}()
-	err = dao.User.Ctx(ctx).Where(do.User{
+	err = dao.User.Ctx(ctx).Cache(gdb.CacheOption{
+		Duration: time.Hour,
+		Name:     mcache.GetDbCacheKey(dao.User.Table(), fmt.Sprintf("LoginByPassword:%s", gmd5.MustEncryptString(nickname+password))),
+	}).Where(do.User{
 		Nickname: nickname,
 		Password: password,
 	}).Scan(&user)
@@ -112,7 +120,10 @@ func (s *sUser) Logout(ctx context.Context, uid string) (err error) {
 
 func (s *sUser) GetById(ctx context.Context, uid string) (*pbentity.User, error) {
 	var user *pbentity.User
-	err := dao.User.Ctx(ctx).Where(do.User{
+	err := dao.User.Ctx(ctx).Cache(gdb.CacheOption{
+		Duration: time.Hour,
+		Name:     mcache.GetDbCacheKey(dao.User.Table(), fmt.Sprintf("GetById:%s", uid)),
+	}).Where(do.User{
 		Id: uid,
 	}).Scan(&user)
 	return user, err
@@ -123,7 +134,10 @@ func (s *sUser) GetByToken(ctx context.Context, token string) (user *pbentity.Us
 	if err != nil {
 		return
 	}
-	err = dao.User.Ctx(ctx).Where(do.User{
+	err = dao.User.Ctx(ctx).Cache(gdb.CacheOption{
+		Duration: time.Hour,
+		Name:     mcache.GetDbCacheKey(dao.User.Table(), fmt.Sprintf("GetById:%s", uid)),
+	}).Where(do.User{
 		Id: uid,
 	}).Scan(&user)
 	return
