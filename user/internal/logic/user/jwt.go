@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/gogf/gf/v2/util/grand"
 	"github.com/golang-jwt/jwt/v5"
 	"time"
 	"yijunqiang/gf-micro/user/internal/utility/mcache"
-	"yijunqiang/gf-micro/user/internal/utility/mstring"
 )
 
 type tokenCache struct {
@@ -72,7 +72,7 @@ func Token(ctx context.Context, no string) (tokenString string, err error) {
 	if err != nil {
 		return
 	}
-	cache.Secret = mstring.RandomString(32)
+	cache.Secret = grand.S(32)
 	tokenString, err = token.SignedString([]byte(cache.Secret))
 	if err != nil {
 		return

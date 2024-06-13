@@ -9,16 +9,15 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/gogf/gf/v2/util/guid"
+	rocketmq_client "github.com/yiqiang3344/rocketmq-client-go"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"time"
-	"yijunqiang/gf-micro/blog/internal/logging"
-	"yijunqiang/gf-micro/blog/internal/model/entity"
-	"yijunqiang/gf-micro/blog/internal/utility/mstring"
-
-	rocketmq_client "github.com/yiqiang3344/rocketmq-client-go"
 	"yijunqiang/gf-micro/blog/api/pbentity"
 	"yijunqiang/gf-micro/blog/internal/dao"
+	"yijunqiang/gf-micro/blog/internal/logging"
 	"yijunqiang/gf-micro/blog/internal/model/do"
+	"yijunqiang/gf-micro/blog/internal/model/entity"
 	"yijunqiang/gf-micro/blog/internal/service"
 )
 
@@ -214,7 +213,7 @@ func (s *sBlog) BatDelete(ctx context.Context, ids []uint64) (batNo string, err 
 			}.Log(ctx)
 		}
 	}()
-	batNo = mstring.RandomString(10)
+	batNo = guid.S()
 
 	//写入消息队列
 	producer, err := rocketmq_client.GetGfProducer(
