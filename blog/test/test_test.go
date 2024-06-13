@@ -22,7 +22,6 @@ func init() {
 	//接入配置中心
 	ctx := gctx.GetInitCtx()
 	if gcfg.Instance().MustGet(ctx, "apollo") != nil {
-
 		adapter, err := gcfg_apollo.CreateAdapterApollo(ctx)
 		if err != nil {
 			panic(err)
@@ -36,7 +35,7 @@ func init() {
 	blogClient = v1.NewBlogClient(grpcx.Client.MustNewGrpcClientConn("blog"))
 }
 
-func _TestCreate(t *testing.T) {
+func TestCreate(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctx = gctx.GetInitCtx()
@@ -56,7 +55,7 @@ func _TestCreate(t *testing.T) {
 	})
 }
 
-func _TestGetOne(t *testing.T) {
+func TestGetOne(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctx = gctx.GetInitCtx()
@@ -76,7 +75,7 @@ func _TestGetOne(t *testing.T) {
 	})
 }
 
-func _TestEdit(t *testing.T) {
+func TestEdit(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctx = gctx.GetInitCtx()
@@ -98,7 +97,7 @@ func _TestEdit(t *testing.T) {
 	})
 }
 
-func _TestGetList(t *testing.T) {
+func TestGetList(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctx = gctx.GetInitCtx()
@@ -109,7 +108,7 @@ func _TestGetList(t *testing.T) {
 	})
 }
 
-func _TestDelete(t *testing.T) {
+func TestDelete(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctx = gctx.GetInitCtx()
@@ -133,14 +132,14 @@ func TestBatDelete(t *testing.T) {
 			ctx = gctx.GetInitCtx()
 		)
 		ret, err := blogClient.BatDelete(ctx, &v1.BatDeleteReq{
-			Ids: []uint64{3, 4, 5, 6, 7, 8, 9, 10},
+			Ids: []uint64{3, 4},
 		})
 		gtest.Assert(err, "")
 		gtest.AssertNE(ret.BatNo, "")
 	})
 }
 
-func _TestGetBatDeleteStatus(t *testing.T) {
+func TestGetBatDeleteStatus(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctx = gctx.GetInitCtx()
@@ -153,7 +152,7 @@ func _TestGetBatDeleteStatus(t *testing.T) {
 	})
 }
 
-func _TestValidation(t *testing.T) {
+func TestValidation(t *testing.T) {
 	gtest.C(t, func(t *gtest.T) {
 		var (
 			ctx = gctx.GetInitCtx()
