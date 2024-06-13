@@ -16,6 +16,8 @@ bin/
 cbuild
 */.DS_Store
 main
+blogStart
+blogConsume
 .vscode
 temp/
 */**/config.*.yaml
