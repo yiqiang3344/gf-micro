@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/gogf/gf/v2/frame/g"
 	"github.com/golang-jwt/jwt/v5"
 	"time"
+	"yijunqiang/gf-micro/user/internal/utility/mcache"
 	"yijunqiang/gf-micro/user/internal/utility/mstring"
 )
 
@@ -30,7 +30,7 @@ func GetCacheToken(ctx context.Context, no string) (token string, err error) {
 	var (
 		cache tokenCache
 	)
-	res, err := g.Redis().Get(ctx, getCacheKey(no))
+	res, err := mcache.RedisCache().Get(ctx, getCacheKey(no))
 	if err != nil {
 		return
 	}
@@ -82,7 +82,7 @@ func Token(ctx context.Context, no string) (tokenString string, err error) {
 	if err != nil {
 		return
 	}
-	err = g.Redis().SetEX(ctx, key, string(tokenCacheJson), int64(duration.Seconds()))
+	err = mcache.RedisCache().Set(ctx, key, string(tokenCacheJson), duration)
 	if err != nil {
 		return
 	}
@@ -100,7 +100,7 @@ func Parse(ctx context.Context, tokenString string) (no string, err error) {
 			err = jwt.ErrInvalidType
 			return
 		}
-		res, err := g.Redis().Get(ctx, getCacheKey(no))
+		res, err := mcache.RedisCache().Get(ctx, getCacheKey(no))
 		if err != nil {
 			return
 		}
@@ -130,6 +130,6 @@ func Parse(ctx context.Context, tokenString string) (no string, err error) {
 }
 
 func Clear(ctx context.Context, no string) (err error) {
-	_, err = g.Redis().Del(ctx, getCacheKey(no))
+	_, err = mcache.RedisCache().Remove(ctx, getCacheKey(no))
 	return
 }

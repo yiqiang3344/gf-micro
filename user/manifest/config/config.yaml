@@ -81,7 +81,7 @@ jsonFormatLogs: [ "access", "error", "biz" ]  # 需要json格式的日志，日�
 database:
   default:
     link: "mysql:root:12345678@tcp(127.0.0.1:3306)/gf_micro_user"
-    debug: true
+    debug: false
 
 # 链路追踪
 otlp:
@@ -97,4 +97,8 @@ redis:
   default:
     address: 127.0.0.1:6379
     db: 1
+  #    pass:
+  db:
+    address: 127.0.0.1:6379
+    db: 2
 #    pass:

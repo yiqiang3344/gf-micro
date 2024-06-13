@@ -2,11 +2,14 @@ package blog
 
 import (
 	"context"
+	"fmt"
 	rmq_client "github.com/apache/rocketmq-clients/golang/v5"
+	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/util/gconv"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"time"
 	"yijunqiang/gf-micro/blog/internal/logging"
 	"yijunqiang/gf-micro/blog/internal/model/entity"
@@ -27,10 +30,18 @@ func init() {
 	service.RegisterBlog(&sBlog{})
 }
 
+func getDbCacheFullKey(table string, key string) string {
+	//gf/database/gdb/gdb.go:386中有定义缓存前缀，但没开放出来
+	return fmt.Sprintf("SelectCache:%s@%s", table, key)
+}
+
+func getDbCacheKey(table string, key string) string {
+	return fmt.Sprintf("%s@%s", table, key)
+}
+
 func (s *sBlog) Create(ctx context.Context, title string, content string, nickname string) (blog *entity.Blog, err error) {
 	defer func() {
-		if e := recover(); e != nil {
-			err = e.(error)
+		if err != nil {
 			logging.BizLog{
 				Tag:     "Create",
 				Message: "failed",
@@ -48,13 +59,20 @@ func (s *sBlog) Create(ctx context.Context, title string, content string, nickna
 		Nickname: nickname,
 	}
 	_, err = dao.Blog.Ctx(ctx).Data(blog).Insert()
+	if err != nil {
+		return
+	}
+	//清除缓存
+	_, err = g.DB().GetCache().Remove(
+		ctx,
+		getDbCacheFullKey(dao.Blog.Table(), "GetList"),
+	)
 	return
 }
 
 func (s *sBlog) Edit(ctx context.Context, id uint64, title string, content string, nickname string) (err error) {
 	defer func() {
-		if e := recover(); e != nil {
-			err = e.(error)
+		if err != nil {
 			logging.BizLog{
 				Tag:     "Edit",
 				Message: "failed",
@@ -87,30 +105,61 @@ func (s *sBlog) Edit(ctx context.Context, id uint64, title string, content strin
 	if err != nil {
 		return
 	}
-	return
-}
-
-func (s *sBlog) GetById(ctx context.Context, id uint64) (*pbentity.Blog, error) {
-	var blog *pbentity.Blog
-	err := dao.Blog.Ctx(ctx).Where(do.Blog{
-		Id: id,
-	}).Scan(&blog)
-	return blog, err
-}
-
-func (s *sBlog) GetList(ctx context.Context) (list []*pbentity.Blog, err error) {
-	list = []*pbentity.Blog{}
-	err = dao.Blog.Ctx(ctx).Scan(&list)
+	//清除缓存
+	_, err = g.DB().GetCache().Remove(
+		ctx,
+		getDbCacheFullKey(dao.Blog.Table(), fmt.Sprintf("GetById:%d", id)),
+		getDbCacheFullKey(dao.Blog.Table(), "GetList"),
+	)
 	if err != nil {
 		return
 	}
 	return
 }
 
+func (s *sBlog) GetById(ctx context.Context, id uint64) (ret *pbentity.Blog, err error) {
+	var blog *entity.Blog
+	err = dao.Blog.Ctx(ctx).Cache(gdb.CacheOption{
+		Duration: time.Hour,
+		Name:     getDbCacheKey(dao.Blog.Table(), fmt.Sprintf("GetById:%d", id)),
+	}).Where(do.Blog{
+		Id: id,
+	}).Scan(&blog)
+	if err != nil {
+		return
+	}
+	if blog != nil {
+		ret = &pbentity.Blog{}
+		gconv.ConvertWithRefer(blog, ret)
+		ret.CreateAt = timestamppb.New(blog.CreateAt.Time)
+		ret.UpdateAt = timestamppb.New(blog.UpdateAt.Time)
+	}
+	return
+}
+
+func (s *sBlog) GetList(ctx context.Context) (list []*pbentity.Blog, err error) {
+	var listRet []entity.Blog
+	err = dao.Blog.Ctx(ctx).Cache(gdb.CacheOption{
+		Duration: time.Hour,
+		Name:     getDbCacheKey(dao.Blog.Table(), "GetList"),
+	}).Scan(&listRet)
+	if err != nil {
+		return
+	}
+	for _, blog := range listRet {
+		b := &pbentity.Blog{}
+		gconv.ConvertWithRefer(blog, b)
+		b.CreateAt = timestamppb.New(blog.CreateAt.Time)
+		b.UpdateAt = timestamppb.New(blog.UpdateAt.Time)
+		list = append(list, b)
+	}
+
+	return
+}
+
 func (s *sBlog) Delete(ctx context.Context, id uint64) (err error) {
 	defer func() {
-		if e := recover(); e != nil {
-			err = e.(error)
+		if err != nil {
 			logging.BizLog{
 				Tag:     "Delete",
 				Message: "failed",
@@ -133,6 +182,15 @@ func (s *sBlog) Delete(ctx context.Context, id uint64) (err error) {
 	_, err = dao.Blog.Ctx(ctx).Where(do.Blog{
 		Id: id,
 	}).Delete()
+	if err != nil {
+		return
+	}
+	//清除缓存
+	_, err = g.DB().GetCache().Remove(
+		ctx,
+		getDbCacheFullKey(dao.Blog.Table(), fmt.Sprintf("GetById:%d", id)),
+		getDbCacheFullKey(dao.Blog.Table(), "GetList"),
+	)
 	if err != nil {
 		return
 	}
@@ -221,9 +279,18 @@ func (s *sBlog) BatDeleteConsumer(ctx context.Context) (stopFunc func(), err err
 			_, err1 := dao.Blog.Ctx(ctx).Where(do.Blog{
 				Id: id,
 			}).Delete()
-			//todo 更新进度
 			if err1 != nil {
 				g.Log().Debugf(ctx, "删除博客[%s]失败:%s", id, err1)
+				return err1
+			}
+			//todo 更新进度
+			//清除缓存
+			_, err1 = g.DB().GetCache().Remove(
+				ctx,
+				getDbCacheFullKey(dao.Blog.Table(), fmt.Sprintf("GetById:%s", id)),
+				getDbCacheFullKey(dao.Blog.Table(), "GetList"),
+			)
+			if err1 != nil {
 				return err1
 			}
 			err1 = consumer.Ack(ctx)

@@ -16,6 +16,7 @@ bin/
 cbuild
 */.DS_Store
 main
+userStart
 .vscode
 temp/
 */**/config.*.yaml

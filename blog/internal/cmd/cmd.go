@@ -6,6 +6,7 @@ import (
 	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
 	"github.com/gogf/gf/contrib/trace/otlpgrpc/v2"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/os/glog"
@@ -77,6 +78,9 @@ func initMiddleware(ctx context.Context) func() {
 
 	// grpc服务注册发现
 	grpcx.Resolver.Register(etcd.New(gcfg.Instance().MustGet(ctx, "registry.etcd").String()))
+
+	// 设置db全局redis缓存配置
+	g.DB().GetCache().SetAdapter(gcache.NewAdapterRedis(g.Redis("db")))
 
 	return func() {
 		for _, v := range shutdownArr {

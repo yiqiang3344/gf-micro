@@ -15,7 +15,7 @@ type (
 	IBlog interface {
 		Create(ctx context.Context, title string, content string, nickname string) (blog *entity.Blog, err error)
 		Edit(ctx context.Context, id uint64, title string, content string, nickname string) (err error)
-		GetById(ctx context.Context, id uint64) (*pbentity.Blog, error)
+		GetById(ctx context.Context, id uint64) (ret *pbentity.Blog, err error)
 		GetList(ctx context.Context) (list []*pbentity.Blog, err error)
 		Delete(ctx context.Context, id uint64) (err error)
 		BatDelete(ctx context.Context, ids []uint64) (batNo string, err error)
