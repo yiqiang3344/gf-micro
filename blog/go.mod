@@ -12,6 +12,7 @@ require (
 	github.com/gogf/gf/contrib/rpc/grpcx/v2 v2.7.1
 	github.com/gogf/gf/contrib/trace/otlpgrpc/v2 v2.7.1
 	github.com/gogf/gf/v2 v2.7.1
+	github.com/xxl-job/xxl-job-executor-go v1.2.0
 	github.com/yiqiang3344/gcfg-apollo v1.1.0
 	github.com/yiqiang3344/rocketmq-client-go v0.0.0
 	google.golang.org/grpc v1.64.0
@@ -34,6 +35,7 @@ require (
 	github.com/fatih/color v1.17.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.4 // indirect
+	github.com/go-basic/ipv4 v1.0.0 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect

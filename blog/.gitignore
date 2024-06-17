@@ -18,6 +18,7 @@ cbuild
 main
 blogStart
 blogConsume
+blogXxljob
 .vscode
 temp/
 */**/config.*.yaml

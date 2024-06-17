@@ -9,6 +9,8 @@ import (
 	"context"
 	"yijunqiang/gf-micro/blog/api/pbentity"
 	"yijunqiang/gf-micro/blog/internal/model/entity"
+
+	"github.com/xxl-job/xxl-job-executor-go"
 )
 
 type (
@@ -19,8 +21,9 @@ type (
 		GetList(ctx context.Context) (list []*pbentity.Blog, err error)
 		Delete(ctx context.Context, id uint64) (err error)
 		BatDelete(ctx context.Context, ids []uint64) (batNo string, err error)
-		BatDeleteConsumer(ctx context.Context) (stopFunc func(), err error)
 		GetBatDeleteStatus(ctx context.Context, batNo string) (status string, err error)
+		BatDeleteConsumer(ctx context.Context) (stopFunc func(), err error)
+		Stats(ctx context.Context, param *xxl.RunReq) (msg string)
 	}
 )
 

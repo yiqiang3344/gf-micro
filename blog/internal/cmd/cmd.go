@@ -22,7 +22,7 @@ var (
 		Name:        "main",
 		Usage:       "main",
 		Brief:       "博客服务管理工具",
-		Description: `功能包括：微服务启动，消费者启动等`,
+		Description: `功能包括：微服务启动，消费者启动，xxljob定时任务等`,
 	}
 	microServer = &gcmd.Command{
 		Name:  "start",
@@ -91,7 +91,7 @@ func initMiddleware(ctx context.Context) func() {
 }
 
 func init() {
-	err := Main.AddCommand(microServer, batDeleteBlogConsumer)
+	err := Main.AddCommand(microServer, batDeleteBlogConsumer, xxljob)
 	if err != nil {
 		panic(err)
 	}

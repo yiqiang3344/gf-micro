@@ -112,3 +112,8 @@ redis:
     address: 127.0.0.1:6379
     db: 2
 #    pass:
+
+# xxljob
+xxljob:
+  serverAddr: "http://127.0.0.1:8182/xxl-job-admin"
+  token: ""
