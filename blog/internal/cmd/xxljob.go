@@ -2,9 +2,11 @@ package cmd
 
 import (
 	"context"
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/xxl-job/xxl-job-executor-go"
+	"yijunqiang/gf-micro/blog/internal/logging"
 	"yijunqiang/gf-micro/blog/internal/service"
 )
 
@@ -29,7 +31,11 @@ var (
 			exec.RegTask("stats", service.Blog().Stats)
 
 			err = exec.Run()
-			g.Log("xxljob").Errorf(ctx, "xxljob启动异常:%v", err)
+			if err != nil {
+				logging.ErrorLog{
+					Method: "xxljob",
+				}.Log(ctx, err)
+			}
 			return
 		},
 	}
@@ -43,5 +49,7 @@ func (l *logger) Info(format string, a ...interface{}) {
 }
 
 func (l *logger) Error(format string, a ...interface{}) {
-	g.Log("xxljob").Errorf(context.Background(), format, a...)
+	logging.ErrorLog{
+		Method: "xxljob",
+	}.Log(context.Background(), gerror.Newf(format, a...))
 }

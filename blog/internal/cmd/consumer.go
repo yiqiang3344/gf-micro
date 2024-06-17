@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"context"
-	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/os/gproc"
 	"os"
+	"yijunqiang/gf-micro/blog/internal/logging"
 	"yijunqiang/gf-micro/blog/internal/service"
 )
 
@@ -20,7 +20,11 @@ var (
 
 			stopFunc, err := service.Blog().BatDeleteConsumer(ctx)
 			if err != nil {
-				g.Log("debug").Errorf(ctx, "batDeleteBlogConsumer异常:%+v", err)
+				reqs, _ := parser.MarshalJSON()
+				logging.ErrorLog{
+					Method: "batDeleteBlogConsumer",
+					Req:    string(reqs),
+				}.Log(ctx, err)
 				panic(err)
 			}
 
