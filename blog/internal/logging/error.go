@@ -18,6 +18,7 @@ type ErrorLog struct {
 }
 
 var ignoreErrCodeStrs = []string{
+	strconv.Itoa(gcode.CodeNotAuthorized.Code()),
 	strconv.Itoa(gcode.CodeValidationFailed.Code()),
 	strconv.Itoa(gcode.CodeInvalidParameter.Code()),
 	strconv.Itoa(gcode.CodeMissingParameter.Code()),

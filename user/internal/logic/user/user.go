@@ -9,6 +9,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/util/gconv"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"time"
 	"yijunqiang/gf-micro/user/internal/logging"
 	"yijunqiang/gf-micro/user/internal/model/entity"
@@ -54,7 +55,7 @@ func (s *sUser) Create(ctx context.Context, nickname string, password string) (u
 	return
 }
 
-func (s *sUser) Login(ctx context.Context, nickname string, password string) (token string, user *pbentity.User, err error) {
+func (s *sUser) Login(ctx context.Context, nickname string, password string) (token string, ret *pbentity.User, err error) {
 	defer func() {
 		if e := recover(); e != nil {
 			err = e.(error)
@@ -69,6 +70,7 @@ func (s *sUser) Login(ctx context.Context, nickname string, password string) (to
 			}.Log(ctx)
 		}
 	}()
+	var user *entity.User
 	err = dao.User.Ctx(ctx).Cache(gdb.CacheOption{
 		Duration: time.Hour,
 		Name:     mcache.GetDbCacheKey(dao.User.Table(), fmt.Sprintf("LoginByPassword:%s", gmd5.MustEncryptString(nickname+password))),
@@ -82,6 +84,15 @@ func (s *sUser) Login(ctx context.Context, nickname string, password string) (to
 	if user == nil {
 		err = gerror.NewCode(gcode.CodeBusinessValidationFailed, "账号或密码错误")
 		return
+	}
+	if err != nil {
+		return
+	}
+	if user != nil {
+		ret = &pbentity.User{}
+		gconv.ConvertWithRefer(user, ret)
+		ret.CreateAt = timestamppb.New(user.CreateAt.Time)
+		ret.UpdateAt = timestamppb.New(user.UpdateAt.Time)
 	}
 
 	//缓存的token已存在则直接使用，不存在则生成新的
@@ -118,27 +129,34 @@ func (s *sUser) Logout(ctx context.Context, uid string) (err error) {
 	return
 }
 
-func (s *sUser) GetById(ctx context.Context, uid string) (*pbentity.User, error) {
-	var user *pbentity.User
-	err := dao.User.Ctx(ctx).Cache(gdb.CacheOption{
-		Duration: time.Hour,
-		Name:     mcache.GetDbCacheKey(dao.User.Table(), fmt.Sprintf("GetById:%s", uid)),
-	}).Where(do.User{
-		Id: uid,
-	}).Scan(&user)
-	return user, err
-}
-
-func (s *sUser) GetByToken(ctx context.Context, token string) (user *pbentity.User, err error) {
-	uid, err := Parse(ctx, token)
-	if err != nil {
-		return
-	}
+func (s *sUser) GetById(ctx context.Context, uid string) (ret *pbentity.User, err error) {
+	var user *entity.User
 	err = dao.User.Ctx(ctx).Cache(gdb.CacheOption{
 		Duration: time.Hour,
 		Name:     mcache.GetDbCacheKey(dao.User.Table(), fmt.Sprintf("GetById:%s", uid)),
 	}).Where(do.User{
 		Id: uid,
 	}).Scan(&user)
+	if err != nil {
+		return
+	}
+	if user != nil {
+		ret = &pbentity.User{}
+		gconv.ConvertWithRefer(user, ret)
+		ret.CreateAt = timestamppb.New(user.CreateAt.Time)
+		ret.UpdateAt = timestamppb.New(user.UpdateAt.Time)
+	}
+	return
+}
+
+func (s *sUser) GetByToken(ctx context.Context, token string) (ret *pbentity.User, err error) {
+	uid, err := Parse(ctx, token)
+	if err != nil {
+		return
+	}
+	ret, err = s.GetById(ctx, uid)
+	if err != nil {
+		return
+	}
 	return
 }
