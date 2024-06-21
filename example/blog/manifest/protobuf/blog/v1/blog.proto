@@ -1,0 +1,69 @@
+// protoc --go_out=plugins=grpc:. *.proto
+
+syntax = "proto3";
+
+package blog;
+
+option go_package = "github.com/yiqiang3344/gf-micro/example/blog/api/blog/v1";
+
+import "pbentity/blog.proto";
+
+service Blog{
+  rpc Create(CreateReq) returns (CreateRes) {}
+  rpc Edit(EditReq) returns (EditRes) {}
+  rpc GetOne(GetOneReq) returns (GetOneRes) {}
+  rpc GetList(GetListReq) returns (GetListRes) {}
+  rpc Delete(DeleteReq) returns (DeleteRes) {}
+  rpc BatDelete(BatDeleteReq) returns (BatDeleteRes) {}
+  rpc GetBatDeleteStatus(GetBatDeleteStatusReq) returns (GetBatDeleteStatusRes) {}
+}
+
+message CreateReq {
+  string Title = 1; // v: required
+  string Content = 2; // v: required
+  string Nickname = 3; // v: required
+}
+message CreateRes {}
+
+message EditReq {
+  uint64 Id = 1; // v: required
+  string Title = 2; // v: required
+  string Content = 3; // v: required
+  string Nickname = 4; // v: required
+}
+message EditRes {
+}
+
+message GetOneReq {
+  uint64 Id = 1; // v: required
+}
+message GetOneRes {
+  pbentity.Blog Blog = 1;
+}
+
+message GetListReq {
+}
+
+message GetListRes {
+  repeated pbentity.Blog List = 1;
+}
+
+message DeleteReq {
+  uint64 Id = 1; // v: required
+}
+message DeleteRes {
+}
+
+message BatDeleteReq {
+  repeated uint64 Ids = 1; // v: required
+}
+message BatDeleteRes {
+  string BatNo = 1;
+}
+
+message GetBatDeleteStatusReq {
+  string BatNo = 1; // v: required
+}
+message GetBatDeleteStatusRes {
+  string Status = 1;
+}

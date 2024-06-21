@@ -1,2 +1,11 @@
-.idea
-log
+.DS_Store
+.buildpath
+.hgignore.swp
+.project
+.orig
+.swp
+.idea/
+.settings/
+.vscode/
+*/.DS_Store
+.vscode

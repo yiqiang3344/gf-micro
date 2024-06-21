@@ -1,0 +1,21 @@
+// ==========================================================================
+// Code generated and maintained by GoFrame CLI tool. DO NOT EDIT.
+// ==========================================================================
+
+syntax = "proto3";
+
+package pbentity;
+
+option go_package = "github.com/yiqiang3344/gf-micro/example/blog/api/pbentity";
+
+import "google/protobuf/timestamp.proto";
+
+message Blog {
+    uint32                    Id       = 1   ; // Blog ID       
+    string                    Title    = 2   ; // Title         
+    string                    Content  = 3   ; // Content       
+    string                    Nickname = 4   ; // Nickname      
+    google.protobuf.Timestamp CreateAt = 5   ; // Created Time  
+    google.protobuf.Timestamp UpdateAt = 6   ; // Updated Time  
+    google.protobuf.Timestamp DeleteAt = 7   ; // Deleted Time  
+}
