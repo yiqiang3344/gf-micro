@@ -5,6 +5,9 @@ go 1.21
 //toolchain go1.22.3
 
 require (
+	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.7.1
+	github.com/gogf/gf/contrib/nosql/redis/v2 v2.7.1
+	github.com/gogf/gf/contrib/rpc/grpcx/v2 v2.7.1
 	github.com/gogf/gf/v2 v2.7.1
 	github.com/stretchr/testify v1.9.0
 	github.com/xuri/excelize/v2 v2.7.1
@@ -16,22 +19,25 @@ require (
 )
 
 require (
+	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/BurntSushi/toml v1.4.0 // indirect
 	github.com/apolloconfig/agollo/v4 v4.4.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
+	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/clbanning/mxj/v2 v2.7.0 // indirect
 	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/coreos/go-systemd/v22 v22.3.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
+	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/fatih/color v1.17.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/go-basic/ipv4 v1.0.0 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
+	github.com/go-sql-driver/mysql v1.8.1 // indirect
 	github.com/gogf/gf/contrib/registry/etcd/v2 v2.7.1 // indirect
 	github.com/gogf/gf/contrib/registry/file/v2 v2.7.1 // indirect
-	github.com/gogf/gf/contrib/rpc/grpcx/v2 v2.7.1 // indirect
 	github.com/gogf/gf/contrib/trace/otlpgrpc/v2 v2.7.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
@@ -48,6 +54,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
+	github.com/redis/go-redis/v9 v9.2.1 // indirect
 	github.com/richardlehane/mscfb v1.0.4 // indirect
 	github.com/richardlehane/msoleps v1.0.3 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect

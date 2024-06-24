@@ -36,6 +36,8 @@ func GetHttpMiddleware(
 				r.Cookie.Remove("token")
 			}
 		}()
+		//强行加入健康检查path
+		whitePaths = append(whitePaths, "/health")
 		if gstr.InArray(whitePaths, r.URL.Path) {
 			r.Middleware.Next()
 			return

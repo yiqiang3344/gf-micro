@@ -1,11 +1,8 @@
 package main
 
 import (
-	_ "web/internal/logic"
-
-	"web/internal/cmd"
-
 	"github.com/gogf/gf/v2/os/gctx"
+	"web/internal/cmd"
 )
 
 func main() {

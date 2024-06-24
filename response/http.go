@@ -20,6 +20,7 @@ type DefaultHandlerResponse struct {
 
 var whiteList = []string{
 	"/api.json",
+	"/health",
 }
 
 func MiddlewareHandlerResponse(r *ghttp.Request) {

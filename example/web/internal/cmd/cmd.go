@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	_ "github.com/gogf/gf/contrib/drivers/mysql/v2"
+	_ "github.com/gogf/gf/contrib/nosql/redis/v2"
 	_ "web/internal/logic"
 	_ "web/internal/packed"
 
