@@ -100,5 +100,3 @@ replace github.com/yiqiang3344/gf-micro/example/user v0.0.0 => ../user
 replace github.com/yiqiang3344/gf-micro/example/blog v0.0.0 => ../blog
 
 replace github.com/yiqiang3344/gf-micro v0.0.0 => ../../
-
-replace github.com/yiqiang3344/rocketmq-client-go v0.0.0 => ../../../rocketmq-client-go
