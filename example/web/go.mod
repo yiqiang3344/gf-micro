@@ -10,7 +10,7 @@ require (
 	github.com/gogf/gf/contrib/rpc/grpcx/v2 v2.7.1
 	github.com/gogf/gf/v2 v2.7.1
 	github.com/stretchr/testify v1.9.0
-	github.com/xuri/excelize/v2 v2.7.1
+	github.com/xuri/excelize/v2 v2.8.1
 	github.com/yiqiang3344/gcfg-apollo v1.1.0
 	github.com/yiqiang3344/gf-micro v0.0.0
 	github.com/yiqiang3344/gf-micro/example/blog v0.0.0
@@ -66,8 +66,8 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.18.2 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
-	github.com/xuri/efp v0.0.0-20220603152613-6918739fd470 // indirect
-	github.com/xuri/nfp v0.0.0-20220409054826-5e722a1d9e22 // indirect
+	github.com/xuri/efp v0.0.0-20231025114914-d1ff6096ae53 // indirect
+	github.com/xuri/nfp v0.0.0-20230919160717-d98342af3f05 // indirect
 	github.com/xxl-job/xxl-job-executor-go v1.2.0 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.10 // indirect
 	go.etcd.io/etcd/client/pkg/v3 v3.5.10 // indirect
