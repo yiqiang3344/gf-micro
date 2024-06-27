@@ -3,13 +3,11 @@ package testFrame
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
 	"github.com/xuri/excelize/v2"
 	"strings"
 	"testing"
-	"web/test"
 )
 
 const (
@@ -25,25 +23,32 @@ type TestWithExcel interface {
 
 type defaultTestWithExcel struct {
 	T              *testing.T     `v:""`
-	CaseData       CaseData       `v:"required#测试用例数据不能为空"`
+	CaseData       CaseData       `v:"required#测试用例数据CaseData不能为空"`
 	PrepareData    PrepareData    `v:""` //测试准备数据
 	BeforeFunc     BeforeFunc     `v:""` //前期处理
-	CaseHandleFunc CaseHandleFunc `v:"required#用例的处理方法不能为空"`
+	CaseHandleFunc CaseHandleFunc `v:"required#用例的处理方法CaseHandleFunc不能为空"`
 	AfterCaseFunc  AfterCaseFunc  `v:""` //单个用例结束后的处理
 	AfterFunc      AfterFunc      `v:""` //测试结束后的处理
 }
 
 type CaseInfo struct {
-	Cfg   map[string]string //配置信息
+	Cfg   *CaseInfoCfg      //配置信息
 	Body  map[string]string //body信息
 	Login map[string]string //登录信息
 	Desc  string            //描述信息
+}
+type CaseInfoCfg struct {
+	Name       string //用例名称
+	IsOpen     bool   //是否开启
+	NeedDelete bool   //用例结束后是否需要删除数据
+	AssertType string //用例断言类型
+	Expect     string //用例期望结果
 }
 type CaseData []CaseInfo
 type PrepareData map[string][]map[string]string
 type OptionsFunc func(o *defaultTestWithExcel)
 type BeforeFunc func(ctx context.Context, prepareData PrepareData)
-type CaseHandleFunc func(ctx context.Context, caseInfo CaseInfo) (ret interface{}, err error)
+type CaseHandleFunc func(ctx context.Context, t *testing.T, caseInfo CaseInfo) (ret interface{}, err error)
 type AfterCaseFunc func(ctx context.Context, caseInfo CaseInfo, caseRet interface{}, isCasePass bool)
 type AfterFunc func(ctx context.Context, prepareData PrepareData, caseData CaseData)
 
@@ -146,13 +151,24 @@ func parseCaseData(f *excelize.File) (ret CaseData, err error) {
 
 	for i := 1; i < len(d); i++ {
 		c := CaseInfo{
-			Cfg:   map[string]string{},
+			Cfg:   &CaseInfoCfg{},
 			Body:  map[string]string{},
 			Login: map[string]string{},
 		}
 		for k, v := range d[i] {
 			if k1, ok := cfg[k]; ok {
-				c.Cfg[k1] = v
+				switch k1 {
+				case "name":
+					c.Cfg.Name = v
+				case "isOpen":
+					c.Cfg.IsOpen = v == "yes" || v == "on" || v == "true"
+				case "needDelete":
+					c.Cfg.NeedDelete = v == "yes" || v == "on" || v == "true"
+				case "assertType":
+					c.Cfg.AssertType = v
+				case "expect":
+					c.Cfg.Expect = v
+				}
 			}
 			if k1, ok := login[k]; ok {
 				c.Login[k1] = v
@@ -210,17 +226,12 @@ func (s *defaultTestWithExcel) Run(ctx context.Context) {
 
 	//2.处理用例
 	for _, v := range s.CaseData {
-		caseName := v.Cfg["name"]              //用例名称
-		caseIsOpen := v.Cfg["isOpen"] == "yes" //用例是否开启
-		assertType := v.Cfg["assertType"]      //用例断言方式
-		expect := v.Cfg["expect"]              //用例期望结果
-
-		if !caseIsOpen {
+		if !v.Cfg.IsOpen {
 			continue
 		}
 		gtest.C(s.T, func(t *gtest.T) {
 			isCasePass := false
-			ret, err := s.CaseHandleFunc(ctx, v)
+			ret, err := s.CaseHandleFunc(ctx, s.T, v)
 			defer func() {
 				//单个用例结束处理
 				if s.AfterCaseFunc != nil {
@@ -228,23 +239,10 @@ func (s *defaultTestWithExcel) Run(ctx context.Context) {
 				}
 			}()
 			if err != nil {
-				t.Errorf(`用例[%s]处理异常:%v`, caseName, err)
+				t.Errorf(`用例[%s]处理异常:%v`, v.Cfg.Name, err)
 				return
 			}
-			//待完善结果处理 todo
-			if assertType == "eq" {
-				test.Assert(caseName, ret, expect)
-			} else if assertType == "status" {
-				if j, err1 := gjson.DecodeToJson(ret); err1 != nil {
-					t.Errorf(`用例[%s]json解析失败:%v`, caseName, err.Error())
-					return
-				} else {
-					test.Assert(caseName, j.Get("status").String(), expect)
-				}
-			} else {
-				t.Errorf(`用例[%s]异常的断言类型:%s`, caseName, assertType)
-				return
-			}
+			AssertByType(v.Cfg.AssertType, v.Cfg.Name, ret, v.Cfg.Expect)
 			isCasePass = true
 		})
 	}

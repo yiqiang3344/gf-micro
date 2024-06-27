@@ -2,9 +2,85 @@ package testFrame
 
 import (
 	"fmt"
+	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"reflect"
+	"strings"
 )
+
+const (
+	AssertTypeNone        = "none" //不使用通用的断言，处理方法中自行处理
+	AssertTypeEQ          = "eq"   //值相等期望值
+	AssertTypeEQWithValue = "eq:"  //值为json,提取指定字段值判断是否等于期望值,eq:为前缀,eq:后面为json的pattern,如“a.b”,下面的同理
+	AssertTypeNQ          = "ne"   //值不相等期望值
+	AssertTypeNQWithValue = "ne:"  //值为json,提取指定字段值判断是否不等于期望值,ne:为前缀
+	AssertTypeGT          = "gt"   //值大于期望值
+	AssertTypeGTWithValue = "gt:"  //值为json,提取指定字段值判断是否大于期望值,gt:为前缀
+	AssertTypeGE          = "ge"   //值大于等于期望值
+	AssertTypeGEWithValue = "ge:"  //值为json,提取指定字段值判断是否大于等于期望值,ge:为前缀
+	AssertTypeLT          = "lt"   //值小于期望值
+	AssertTypeLTWithValue = "lt:"  //值为json,提取指定字段值判断是否小于期望值,lt:为前缀
+	AssertTypeLE          = "le"   //值小于等于期望值
+	AssertTypeLEWithValue = "le:"  //值为json,提取指定字段值判断是否小于等于期望值,le:为前缀
+	AssertTypeIN          = "in"   //值属于期望值，期望值为json数组
+	AssertTypeINWithValue = "in:"  //值为json,提取指定字段值判断属于期望值,in:为前缀,期望值为json数组
+	AssertTypeNI          = "ni"   //值不属于期望值，期望值为json数组
+	AssertTypeNIWithValue = "ni:"  //值为json,提取指定字段值判断不属于期望值,ni:为前缀,期望值为json数组
+)
+
+// AssertByType checks `value` and `expect` by AssertType.
+func AssertByType(type_ string, caseName string, value interface{}, expect string) {
+	typeNew, valueNew := type_, value
+	if gstr.InArray([]string{AssertTypeEQWithValue, AssertTypeNQWithValue, AssertTypeGTWithValue, AssertTypeGEWithValue, AssertTypeLTWithValue, AssertTypeLEWithValue, AssertTypeINWithValue, AssertTypeNIWithValue}, type_) {
+		tArr := strings.Split(type_, ":")
+		typeNew = tArr[0]
+		pattern := tArr[1]
+		if strings.Trim(pattern, "") == "" {
+			panic(fmt.Sprintf("[ASSERT] %v AssertType %v json pattern为空", caseName, type_))
+		}
+		if j, err := gjson.DecodeToJson(value); err != nil {
+			panic(fmt.Sprintf("[ASSERT] %v value %v json解析失败:%v", caseName, value, err))
+		} else {
+			valueNew = j.Get(pattern).Interface()
+		}
+	}
+
+	switch typeNew {
+	case AssertTypeNone:
+		//忽略不做处理
+		return
+	case AssertTypeEQ:
+		Assert(caseName, valueNew, expect)
+	case AssertTypeNQ:
+		AssertNE(caseName, valueNew, expect)
+	case AssertTypeGT:
+		AssertGT(caseName, valueNew, expect)
+	case AssertTypeGE:
+		AssertGE(caseName, valueNew, expect)
+	case AssertTypeLT:
+		AssertLT(caseName, valueNew, expect)
+	case AssertTypeLE:
+		AssertLE(caseName, valueNew, expect)
+	case AssertTypeIN:
+		expectN, err := jsonToStrArr(expect)
+		if err != nil {
+			panic(fmt.Sprintf("[ASSERT] %v EXPECT %v json解析失败:%v", caseName, expect, err))
+		}
+		AssertIN(caseName, valueNew, expectN)
+	case AssertTypeNI:
+		expectN, err := jsonToStrArr(expect)
+		if err != nil {
+			panic(fmt.Sprintf("[ASSERT] %v EXPECT %v json解析失败:%v", caseName, expect, err))
+		}
+		AssertNI(caseName, valueNew, expectN)
+	}
+}
+
+func jsonToStrArr(jsonStr string) (ret []string, err error) {
+	err = gjson.Unmarshal([]byte(jsonStr), &ret)
+	return
+}
 
 // Assert checks `value` and `expect` EQUAL.
 func Assert(caseName string, value, expect interface{}) {
