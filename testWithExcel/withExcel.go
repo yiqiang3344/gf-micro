@@ -5,16 +5,18 @@ import (
 	"fmt"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/xuri/excelize/v2"
 	"strings"
 	"testing"
 )
 
 const (
-	CaseSheetName = "case" //用例的sheet名
-	LoginPrefix   = "l:"   //登录信息的前缀
-	BodyPrefix    = "b:"   //body信息的前缀
-	DescKey       = "desc" //用例描述的key
+	CaseSheetName = "case"      //用例的sheet名
+	LoginPrefix   = "l:"        //登录信息的前缀
+	BodyPrefix    = "b:"        //body信息的前缀
+	DescKey       = "desc"      //用例描述的key
+	AssignVarKey  = "assignVar" //变量设置的key
 )
 
 type TestWithExcel interface {
@@ -23,6 +25,7 @@ type TestWithExcel interface {
 
 type defaultTestWithExcel struct {
 	T              *testing.T     `v:""`
+	Failfast       bool           `v:""` //只要有用例失败就停止，默认true
 	CaseData       CaseData       `v:"required#测试用例数据CaseData不能为空"`
 	PrepareData    PrepareData    `v:""` //测试准备数据
 	BeforeFunc     BeforeFunc     `v:""` //前期处理
@@ -32,15 +35,16 @@ type defaultTestWithExcel struct {
 }
 
 type CaseInfo struct {
-	Cfg   *CaseInfoCfg      //配置信息
-	Body  map[string]string //body信息
-	Login map[string]string //登录信息
-	Desc  string            //描述信息
+	Cfg       *CaseInfoCfg      //配置信息
+	Body      map[string]string //body信息
+	Login     map[string]string //登录信息
+	Extend    map[string]string //自定义扩展参数
+	Desc      string            //描述信息
+	AssignVar string            //变量设置
 }
 type CaseInfoCfg struct {
 	Name       string //用例名称
 	IsOpen     bool   //是否开启
-	NeedDelete bool   //用例结束后是否需要删除数据
 	AssertType string //用例断言类型
 	Expect     string //用例期望结果
 }
@@ -50,8 +54,13 @@ type OptionsFunc func(o *defaultTestWithExcel)
 type BeforeFunc func(ctx context.Context, prepareData PrepareData)
 type CaseHandleFunc func(ctx context.Context, t *testing.T, caseInfo CaseInfo) (ret interface{}, err error)
 type AfterCaseFunc func(ctx context.Context, caseInfo CaseInfo, caseRet interface{}, isCasePass bool)
-type AfterFunc func(ctx context.Context, prepareData PrepareData, caseData CaseData)
+type AfterFunc func(ctx context.Context, prepareData PrepareData, caseData CaseData, failCase *CaseInfo)
 
+func WithFailfast(f bool) OptionsFunc {
+	return func(o *defaultTestWithExcel) {
+		o.Failfast = f
+	}
+}
 func WithBeforeFunc(f BeforeFunc) OptionsFunc {
 	return func(o *defaultTestWithExcel) {
 		o.BeforeFunc = f
@@ -85,7 +94,6 @@ func New(t *testing.T, testDataFile string, funcs ...OptionsFunc) (ret TestWithE
 	if err != nil {
 		return
 	}
-	//处理excel数据，提取测试用例数据和测试准备数据 todo
 	caseData, err := parseCaseData(f)
 	if err != nil {
 		return
@@ -97,11 +105,12 @@ func New(t *testing.T, testDataFile string, funcs ...OptionsFunc) (ret TestWithE
 
 	d := &defaultTestWithExcel{
 		T:           t,
+		Failfast:    true,
 		CaseData:    caseData,
 		PrepareData: prepareData,
 	}
 
-	//方法赋值
+	//参数赋值
 	for _, v := range funcs {
 		v(d)
 	}
@@ -115,6 +124,16 @@ func New(t *testing.T, testDataFile string, funcs ...OptionsFunc) (ret TestWithE
 }
 
 func parseCaseData(f *excelize.File) (ret CaseData, err error) {
+	var (
+		cfgIndexMap = map[int]string{
+			0: "name",
+			1: "isOpen",
+			2: "assertType",
+			3: "expect",
+		}
+		loginIndexMap, bodyIndexMap, extendIndexMap = map[int]string{}, map[int]string{}, map[int]string{}
+		descIndex, AssignVarIndex                   int
+	)
 	d, err := f.GetRows(CaseSheetName)
 	if err != nil {
 		return
@@ -123,61 +142,57 @@ func parseCaseData(f *excelize.File) (ret CaseData, err error) {
 	if len(d) == 0 {
 		return nil, fmt.Errorf("sheet%s的用例数据不能为空", CaseSheetName)
 	}
-	//配置的字段定义
-	cfg := map[int]string{
-		0: "name",
-		1: "isOpen",
-		2: "needDelete",
-		3: "assertType",
-		4: "expect",
-	}
-	for k, v := range cfg {
+	//检查配置的字段定义
+	for k, v := range cfgIndexMap {
 		if len(d[0])-1 < k || d[0][k] != v {
 			return nil, fmt.Errorf("sheet%s未在第%d列定义配置字段%s", CaseSheetName, k, v)
 		}
 	}
-	if d[0][len(d[0])-1] != DescKey {
-		return nil, fmt.Errorf("sheet%s未在最后一列定义用例描述字段%s", CaseSheetName, DescKey)
-	}
-	login, body, descIndex := map[int]string{}, map[int]string{}, len(d[0])-1
-	for i := len(cfg); i < len(d[0]); i++ {
-		if strings.HasPrefix(d[0][i], LoginPrefix) {
-			login[i], _ = strings.CutPrefix(d[0][i], LoginPrefix)
-		}
-		if strings.HasPrefix(d[0][i], BodyPrefix) {
-			body[i], _ = strings.CutPrefix(d[0][i], BodyPrefix)
+	//获取各种字段的key索引
+	for i := len(cfgIndexMap); i < len(d[0]); i++ {
+		switch {
+		case strings.HasPrefix(d[0][i], LoginPrefix):
+			loginIndexMap[i], _ = strings.CutPrefix(d[0][i], LoginPrefix)
+		case strings.HasPrefix(d[0][i], BodyPrefix):
+			bodyIndexMap[i], _ = strings.CutPrefix(d[0][i], BodyPrefix)
+		case d[0][i] == DescKey:
+			descIndex = i
+		case d[0][i] == AssignVarKey:
+			AssignVarIndex = i
+		default:
+			extendIndexMap[i] = d[0][i]
 		}
 	}
 
 	for i := 1; i < len(d); i++ {
 		c := CaseInfo{
-			Cfg:   &CaseInfoCfg{},
-			Body:  map[string]string{},
-			Login: map[string]string{},
+			Cfg:    &CaseInfoCfg{},
+			Body:   map[string]string{},
+			Login:  map[string]string{},
+			Extend: map[string]string{},
 		}
 		for k, v := range d[i] {
-			if k1, ok := cfg[k]; ok {
+			if k1, ok := cfgIndexMap[k]; ok {
 				switch k1 {
 				case "name":
 					c.Cfg.Name = v
 				case "isOpen":
 					c.Cfg.IsOpen = v == "yes" || v == "on" || v == "true"
-				case "needDelete":
-					c.Cfg.NeedDelete = v == "yes" || v == "on" || v == "true"
 				case "assertType":
 					c.Cfg.AssertType = v
 				case "expect":
 					c.Cfg.Expect = v
 				}
-			}
-			if k1, ok := login[k]; ok {
+			} else if k1, ok = loginIndexMap[k]; ok {
 				c.Login[k1] = v
-			}
-			if k1, ok := body[k]; ok {
+			} else if k1, ok = bodyIndexMap[k]; ok {
 				c.Body[k1] = v
-			}
-			if k == descIndex {
+			} else if k == descIndex {
 				c.Desc = v
+			} else if k == AssignVarIndex {
+				c.AssignVar = v
+			} else if k1, ok = extendIndexMap[k]; ok {
+				c.Extend[k1] = v
 			}
 		}
 		ret = append(ret, c)
@@ -225,30 +240,51 @@ func (s *defaultTestWithExcel) Run(ctx context.Context) {
 	}
 
 	//2.处理用例
+	var failCase *CaseInfo
 	for _, v := range s.CaseData {
 		if !v.Cfg.IsOpen {
 			continue
 		}
+		//变量替换
+		HandleVar(&v.Body)
+		HandleVar(&v.Login)
+		HandleVar(&v.Extend)
+		failCase = nil
 		gtest.C(s.T, func(t *gtest.T) {
 			isCasePass := false
+			//调用自定义处理方法
 			ret, err := s.CaseHandleFunc(ctx, s.T, v)
 			defer func() {
 				//单个用例结束处理
 				if s.AfterCaseFunc != nil {
 					s.AfterCaseFunc(ctx, v, ret, isCasePass)
 				}
+				//是否失败
+				if !isCasePass {
+					failCase = &v
+				}
 			}()
 			if err != nil {
 				t.Errorf(`用例[%s]处理异常:%v`, v.Cfg.Name, err)
 				return
 			}
-			AssertByType(v.Cfg.AssertType, v.Cfg.Name, ret, v.Cfg.Expect)
+			//变量采集
+			err = SetVarByAssignVarPattern(gconv.String(ret), v.AssignVar)
+			if err != nil {
+				t.Errorf(`用例[%s]处理异常:%v`, v.Cfg.Name, err)
+				return
+			}
+			//断言
+			AssertByType(v.Cfg.AssertType, v.Cfg.Name, ret, ReplayVar(v.Cfg.Expect))
 			isCasePass = true
 		})
+		if s.Failfast && failCase != nil {
+			break
+		}
 	}
 
 	//3.测试后处理
 	if s.AfterFunc != nil {
-		s.AfterFunc(ctx, s.PrepareData, s.CaseData)
+		s.AfterFunc(ctx, s.PrepareData, s.CaseData, failCase)
 	}
 }

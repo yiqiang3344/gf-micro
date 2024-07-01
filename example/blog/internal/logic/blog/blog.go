@@ -3,7 +3,7 @@ package blog
 import (
 	"context"
 	"fmt"
-	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
@@ -236,15 +236,15 @@ func (s *sBlog) BatDelete(ctx context.Context, ids []uint64) (batNo string, err 
 
 	//生成批次号，及初始化进度信息
 	batNo = guid.S()
-	idsMap := gmap.NewListMap()
+	idsList := garray.NewSortedIntArray()
 	for _, v := range ids {
-		idsMap.Set(v, 1)
+		idsList.Add(gconv.Int(v))
 	}
-	err = g.Redis().SetEX(ctx, getBatDeleteProgressKey(batNo), idsMap.Size(), int64(time.Hour.Seconds()))
+	err = g.Redis().SetEX(ctx, getBatDeleteProgressKey(batNo), idsList.Len(), int64(time.Hour.Seconds()))
 	if err != nil {
 		return
 	}
-	for id := range idsMap.Keys() {
+	for _, id := range idsList.Slice() {
 		_, err1 := producer.Send(ctx, rocketmq_client.TopicNormal, rocketmq_client.Message{
 			Topic: BatDeleteTopic,
 			Keys: []string{

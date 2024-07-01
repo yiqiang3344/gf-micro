@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/yiqiang3344/gf-micro/testWithExcel"
 	"testing"
-	v1 "web/api/user/v1"
 	"web/test"
 )
 
@@ -12,11 +11,7 @@ func TestUserCreate(t *testing.T) {
 	o, err := testWithExcel.New(t, "./testdata/create.xlsx",
 		testWithExcel.WithCaseHandleFunc(func(ctx context.Context, t *testing.T, caseInfo testWithExcel.CaseInfo) (ret interface{}, err error) {
 			client := test.GetClient(ctx)
-			data := v1.UserCreateReq{
-				Nickname: caseInfo.Body["nickname"],
-				Password: caseInfo.Body["password"],
-			}
-			ret = client.PostContent(ctx, "/user/create", data)
+			ret = client.PostContent(ctx, "/user/create", caseInfo.Body)
 			return
 		}),
 	)
@@ -30,11 +25,7 @@ func TestUserLogin(t *testing.T) {
 	o, err := testWithExcel.New(t, "./testdata/login.xlsx",
 		testWithExcel.WithCaseHandleFunc(func(ctx context.Context, t *testing.T, caseInfo testWithExcel.CaseInfo) (ret interface{}, err error) {
 			client := test.GetClient(ctx)
-			data := v1.UserLoginReq{
-				Nickname: caseInfo.Body["nickname"],
-				Password: caseInfo.Body["password"],
-			}
-			ret = client.PostContent(ctx, "/user/login", data)
+			ret = client.PostContent(ctx, "/user/login", caseInfo.Body)
 			return
 		}),
 	)
@@ -55,8 +46,7 @@ func TestUserDetail(t *testing.T) {
 				}
 			}
 
-			data := v1.UserDetailReq{}
-			ret = client.PostContent(ctx, "/user/detail", data)
+			ret = client.PostContent(ctx, "/user/detail", caseInfo.Body)
 			return
 		}),
 	)
@@ -77,8 +67,7 @@ func TestUserLogout(t *testing.T) {
 				}
 			}
 
-			data := v1.UserLogoutReq{}
-			ret = client.PostContent(ctx, "/user/logout", data)
+			ret = client.PostContent(ctx, "/user/logout", caseInfo.Body)
 			return
 		}),
 	)
