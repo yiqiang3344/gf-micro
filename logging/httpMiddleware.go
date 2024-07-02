@@ -44,9 +44,9 @@ func MiddlewareHandlerAccessLog(r *ghttp.Request) {
 		Host:     r.Host,
 		Url:      r.URL.Path,
 		Cost:     float64(gtime.TimestampMilli()-r.EnterTime.TimestampMilli()) / 1000,
+		Req:      body,
+		Res:      res,
 		Ip:       r.GetClientIp(),
-		Body:     body,
-		Response: res,
 		Header:   r.Header,
 	}.Log(r.GetCtx())
 }

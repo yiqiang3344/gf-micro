@@ -25,16 +25,6 @@ func init() {
 	//初始化grpc全局中间件
 	cmd.GetGrpcMiddleware()(ctx)
 
-	//if gcfg.Instance().MustGet(ctx, "apollo") != nil {
-	//	adapter, err := gcfg_apollo.CreateAdapterApollo(ctx)
-	//	if err != nil {
-	//		panic(err)
-	//	}
-	//	gcfg.Instance().SetAdapter(adapter)
-	//}
-	//// grpc服务注册发现
-	//grpcx.Resolver.Register(etcd.New(gcfg.Instance().MustGet(ctx, "registry.grpcEtcd").String()))
-
 	// 客户端初始化
 	userClient = v1.NewUserClient(grpcx.Client.MustNewGrpcClientConn("user"))
 }

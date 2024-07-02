@@ -13,9 +13,9 @@ type HttpAccessLog struct {
 	Host     string                 `json:"host"`
 	Url      string                 `json:"url"`
 	Cost     float64                `json:"cost"`
+	Req      map[string]interface{} `json:"req"`
+	Res      interface{}            `json:"res"`
 	Ip       string                 `json:"ip"`
-	Body     map[string]interface{} `json:"body"`
-	Response interface{}            `json:"response"`
 	Header   http.Header            `json:"header"`
 }
 
