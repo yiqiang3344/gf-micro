@@ -2,6 +2,7 @@ package testWithExcel
 
 import (
 	"fmt"
+	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -88,6 +89,18 @@ func GenTestCaseExcelByOpenApiJson(openApiJsonStr string, outputDir string) erro
 					}
 				}
 			}
+			// 对参数排序，起码每次都是相同的
+			var arr []*Property
+			for _, v2 := range garray.NewSortedArrayFrom(gconv.Interfaces(path.Req), func(a, b interface{}) int {
+				if a.(*Property).Name > b.(*Property).Name {
+					return 1
+				} else {
+					return -1
+				}
+			}).Slice() {
+				arr = append(arr, v2.(*Property))
+			}
+			path.Req = arr
 			paths = append(paths, path)
 		}
 	}
