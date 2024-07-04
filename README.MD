@@ -40,7 +40,7 @@
 
 ## 自动化测试
 
-- [testWithExcel](testWithExcel) excel自动化测试框架，可基于excel来实现对单个接口的全方位测试，也可以基于excel来实现对某个业务场景的全流程测试。
+- [testWithExcel](testWithExcel) excel自动化测试框架，可基于excel来实现对单个接口的全方位测试，也可以基于excel来实现对某个业务场景的全流程测试。此外封装了基于openApi生成http接口单元测试用例excel的cmd。
 
 ## 配置扫描
 待完善，用于检查配置是否规范，防止胡乱配置。
