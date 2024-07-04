@@ -5,6 +5,7 @@ import (
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/xuri/excelize/v2"
@@ -45,8 +46,35 @@ type excelHead struct {
 	Width float64 `json:"width"`
 }
 
+type FilterType string
+
+const (
+	FilterTypeInclude FilterType = "include" //包含
+	FilterTypeExpel   FilterType = "expel"   //排出
+)
+
+type Filter struct {
+	Path   string
+	Method string
+	Type   FilterType
+}
+
 // GenTestCaseExcelByOpenApiJson 根据openApi的json文件生成接口测试用例excel
-func GenTestCaseExcelByOpenApiJson(openApiJsonStr string, outputDir string) error {
+func GenTestCaseExcelByOpenApiJson(openApiJsonStr string, outputDir string, filter ...[]*Filter) error {
+	//初始化过滤条件
+	filterIncludeMap := map[string]int{}
+	filterExpelMap := map[string]int{}
+	if len(filter) > 0 {
+		for _, v := range filter[0] {
+			switch v.Type {
+			case FilterTypeInclude:
+				filterIncludeMap[v.Method+"-"+v.Path] = 1
+			case FilterTypeExpel:
+				filterExpelMap[v.Method+"-"+v.Path] = 1
+			}
+		}
+	}
+
 	//根据openApi的json文件生成接口测试用例excel
 	j, err := gjson.DecodeToJson(openApiJsonStr)
 	if err != nil {
@@ -62,6 +90,21 @@ func GenTestCaseExcelByOpenApiJson(openApiJsonStr string, outputDir string) erro
 			path.Path = k
 			path.Method = k1
 			path.Summary = v1.(map[string]interface{})["summary"].(string)
+
+			//按过滤条件过滤
+			if len(filterIncludeMap) > 0 {
+				if _, ok := filterIncludeMap[path.Method+"-"+path.Path]; !ok {
+					g.Dump("不包含", path.Method+"-"+path.Path)
+					continue
+				}
+			}
+			if len(filterExpelMap) > 0 {
+				if _, ok := filterExpelMap[path.Method+"-"+path.Path]; ok {
+					g.Dump("过滤", path.Method+"-"+path.Path)
+					continue
+				}
+			}
+
 			switch path.Method {
 			case "post", "put", "patch":
 				if v1.(map[string]interface{})["requestBody"] != nil {
