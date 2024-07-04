@@ -3,6 +3,7 @@ package blog
 import (
 	"context"
 	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
+	"github.com/gogf/gf/v2/util/gconv"
 	v1 "github.com/yiqiang3344/gf-micro/example/blog/api/blog/v1"
 	"github.com/yiqiang3344/gf-micro/example/blog/internal/service"
 )
@@ -23,13 +24,13 @@ func (*Controller) Create(ctx context.Context, req *v1.CreateReq) (res *v1.Creat
 
 func (*Controller) Edit(ctx context.Context, req *v1.EditReq) (res *v1.EditRes, err error) {
 	res = &v1.EditRes{}
-	err = service.Blog().Edit(ctx, req.Id, req.Title, req.Content, req.Nickname)
+	err = service.Blog().Edit(ctx, gconv.Uint64(req.Id), req.Title, req.Content, req.Nickname)
 	return
 }
 
 func (*Controller) GetOne(ctx context.Context, req *v1.GetOneReq) (res *v1.GetOneRes, err error) {
 	res = &v1.GetOneRes{}
-	res.Blog, err = service.Blog().GetById(ctx, req.Id)
+	res.Blog, err = service.Blog().GetById(ctx, gconv.Uint64(req.Id))
 	return
 }
 
@@ -41,13 +42,13 @@ func (*Controller) GetList(ctx context.Context, req *v1.GetListReq) (res *v1.Get
 
 func (*Controller) Delete(ctx context.Context, req *v1.DeleteReq) (res *v1.DeleteRes, err error) {
 	res = &v1.DeleteRes{}
-	err = service.Blog().Delete(ctx, req.Id)
+	err = service.Blog().Delete(ctx, gconv.Uint64(req.Id))
 	return
 }
 
 func (*Controller) BatDelete(ctx context.Context, req *v1.BatDeleteReq) (res *v1.BatDeleteRes, err error) {
 	res = &v1.BatDeleteRes{}
-	res.BatNo, err = service.Blog().BatDelete(ctx, req.Ids)
+	res.BatNo, err = service.Blog().BatDelete(ctx, gconv.Uint64s(req.Ids))
 	return
 }
 

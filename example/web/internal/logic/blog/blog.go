@@ -5,7 +5,6 @@ import (
 	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/yiqiang3344/gf-micro/auth"
 	blogMicroV1 "github.com/yiqiang3344/gf-micro/example/blog/api/blog/v1"
 	"strings"
@@ -73,7 +72,7 @@ func (c *sBlog) BlogEdit(ctx context.Context, req *v1.BlogEditReq) (res *v1.Blog
 	}
 	res = &v1.BlogEditRes{}
 	_, err = getBlogClient().Edit(ctx, &blogMicroV1.EditReq{
-		Id:       gconv.Uint64(req.Id),
+		Id:       req.Id,
 		Nickname: currentUser.Nickname,
 		Title:    req.Title,
 		Content:  req.Content,
@@ -87,7 +86,7 @@ func (c *sBlog) BlogEdit(ctx context.Context, req *v1.BlogEditReq) (res *v1.Blog
 func (c *sBlog) BlogDetail(ctx context.Context, req *v1.BlogDetailReq) (res *v1.BlogDetailRes, err error) {
 	res = &v1.BlogDetailRes{}
 	ret, err := getBlogClient().GetOne(ctx, &blogMicroV1.GetOneReq{
-		Id: gconv.Uint64(req.Id),
+		Id: req.Id,
 	})
 	if err != nil {
 		return
@@ -147,7 +146,7 @@ func (c *sBlog) BlogDelete(ctx context.Context, req *v1.BlogDeleteReq) (res *v1.
 	}
 
 	ret, err := getBlogClient().GetOne(ctx, &blogMicroV1.GetOneReq{
-		Id: gconv.Uint64(req.Id),
+		Id: req.Id,
 	})
 	if err != nil {
 		return
@@ -162,7 +161,7 @@ func (c *sBlog) BlogDelete(ctx context.Context, req *v1.BlogDeleteReq) (res *v1.
 	}
 
 	_, err = getBlogClient().Delete(ctx, &blogMicroV1.DeleteReq{
-		Id: gconv.Uint64(req.Id),
+		Id: req.Id,
 	})
 	if err != nil {
 		return
@@ -185,7 +184,7 @@ func (c *sBlog) BlogBatDelete(ctx context.Context, req *v1.BlogBatDeleteReq) (re
 			}.Log(ctx)
 		}
 	}()
-	var ids []uint64
+	var ids []string
 	res = &v1.BlogBatDeleteRes{}
 
 	currentUser, err := auth.GetStandardAuth().GetUserWithCheck(ctx)
@@ -193,9 +192,8 @@ func (c *sBlog) BlogBatDelete(ctx context.Context, req *v1.BlogBatDeleteReq) (re
 		return
 	}
 
-	for _, v := range strings.Split(req.Ids, ",") {
+	for _, id := range strings.Split(req.Ids, ",") {
 		var ret *blogMicroV1.GetOneRes
-		id := gconv.Uint64(v)
 		ret, err = getBlogClient().GetOne(ctx, &blogMicroV1.GetOneReq{
 			Id: id,
 		})

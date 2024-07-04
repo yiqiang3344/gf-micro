@@ -211,6 +211,24 @@ func (s *sBlog) BatDelete(ctx context.Context, ids []uint64) (batNo string, err 
 		}
 	}()
 
+	if len(ids) == 0 {
+		err = gerror.NewCode(gcode.CodeInvalidParameter, "ids不能为空")
+		return
+	}
+
+	idsList := garray.NewSortedIntArray()
+	for _, v := range ids {
+		//检查博客是否存在
+		blog, err1 := s.GetById(ctx, v)
+		if err1 != nil {
+			return "", err1
+		}
+		if blog == nil {
+			return "", gerror.NewCode(gcode.CodeBusinessValidationFailed, fmt.Sprintf("博客[%d]不存在", v))
+		}
+		idsList.Add(gconv.Int(v))
+	}
+
 	//写入消息队列
 	producer, err := rocketmq_client.GetGfProducer(
 		&rocketmq_client.Config{
@@ -236,13 +254,9 @@ func (s *sBlog) BatDelete(ctx context.Context, ids []uint64) (batNo string, err 
 
 	//生成批次号，及初始化进度信息
 	batNo = guid.S()
-	idsList := garray.NewSortedIntArray()
-	for _, v := range ids {
-		idsList.Add(gconv.Int(v))
-	}
 	err = g.Redis().SetEX(ctx, getBatDeleteProgressKey(batNo), idsList.Len(), int64(time.Hour.Seconds()))
 	if err != nil {
-		return
+		return "", err
 	}
 	for _, id := range idsList.Slice() {
 		_, err1 := producer.Send(ctx, rocketmq_client.TopicNormal, rocketmq_client.Message{

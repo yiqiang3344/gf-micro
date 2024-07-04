@@ -105,6 +105,9 @@ func jsonToStrArr(jsonStr string) (ret []any, err error) {
 }
 
 func lenForValue(value interface{}) (ret int, err error) {
+	if value == nil {
+		return 0, nil
+	}
 	t := reflect.TypeOf(value)
 	switch t.Kind() {
 	case reflect.Array, reflect.Chan, reflect.Map, reflect.Slice, reflect.String:
@@ -308,6 +311,9 @@ func AssertIN(caseName string, value, expect interface{}) {
 	switch expectKind {
 	case reflect.Slice, reflect.Array:
 		expectSlice := gconv.Strings(expect)
+		if len(gconv.Strings(value)) == 0 {
+			passed = false
+		}
 		for _, v1 := range gconv.Strings(value) {
 			result := false
 			for _, v2 := range expectSlice {
@@ -339,6 +345,9 @@ func AssertNI(caseName string, value, expect interface{}) {
 	)
 	switch expectKind {
 	case reflect.Slice, reflect.Array:
+		if len(gconv.Strings(value)) == 0 {
+			passed = false
+		}
 		for _, v1 := range gconv.Strings(value) {
 			result := true
 			for _, v2 := range gconv.Strings(expect) {

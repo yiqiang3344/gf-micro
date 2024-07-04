@@ -26,7 +26,7 @@ message CreateReq {
 message CreateRes {}
 
 message EditReq {
-  uint64 Id = 1; // v: required
+  string Id = 1; // v: required
   string Title = 2; // v: required
   string Content = 3; // v: required
   string Nickname = 4; // v: required
@@ -35,7 +35,7 @@ message EditRes {
 }
 
 message GetOneReq {
-  uint64 Id = 1; // v: required
+  string Id = 1; // v: required
 }
 message GetOneRes {
   pbentity.Blog Blog = 1;
@@ -49,13 +49,13 @@ message GetListRes {
 }
 
 message DeleteReq {
-  uint64 Id = 1; // v: required
+  string Id = 1; // v: required
 }
 message DeleteRes {
 }
 
 message BatDeleteReq {
-  repeated uint64 Ids = 1; // v: required
+  repeated string Ids = 1; // v: required
 }
 message BatDeleteRes {
   string BatNo = 1;
