@@ -5,7 +5,6 @@ import (
 	"github.com/gogf/gf/v2/container/garray"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/encoding/gjson"
-	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/xuri/excelize/v2"
@@ -94,13 +93,11 @@ func GenTestCaseExcelByOpenApiJson(openApiJsonStr string, outputDir string, filt
 			//按过滤条件过滤
 			if len(filterIncludeMap) > 0 {
 				if _, ok := filterIncludeMap[path.Method+"-"+path.Path]; !ok {
-					g.Dump("不包含", path.Method+"-"+path.Path)
 					continue
 				}
 			}
 			if len(filterExpelMap) > 0 {
 				if _, ok := filterExpelMap[path.Method+"-"+path.Path]; ok {
-					g.Dump("过滤", path.Method+"-"+path.Path)
 					continue
 				}
 			}
