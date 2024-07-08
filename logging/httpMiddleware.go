@@ -67,6 +67,7 @@ func MiddlewareHandlerErrorLog(r *ghttp.Request) {
 
 	ErrorLog{
 		Method: r.Method,
+		Req:    r.GetRequestMap(),
 	}.Log(r.Context(), err)
 }
 

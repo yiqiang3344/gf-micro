@@ -7,6 +7,7 @@ package service
 
 import (
 	"context"
+
 	"github.com/yiqiang3344/gf-micro/example/user/api/pbentity"
 	"github.com/yiqiang3344/gf-micro/example/user/internal/model/entity"
 )

@@ -17,6 +17,7 @@ cbuild
 */.DS_Store
 main
 userStart
+userHttpStart
 .vscode
 temp/
 */**/config.*.yaml

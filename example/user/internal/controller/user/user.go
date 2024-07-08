@@ -2,10 +2,9 @@ package user
 
 import (
 	"context"
+	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
 	v1 "github.com/yiqiang3344/gf-micro/example/user/api/user/v1"
 	"github.com/yiqiang3344/gf-micro/example/user/internal/service"
-
-	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
 )
 
 type Controller struct {
