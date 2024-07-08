@@ -7,6 +7,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/yiqiang3344/gf-micro/auth"
 	blogMicroV1 "github.com/yiqiang3344/gf-micro/example/blog/api/blog/v1"
+	logging2 "github.com/yiqiang3344/gf-micro/logging"
 	"strings"
 	v1 "web/api/blog/v1"
 	"web/internal/logging"
@@ -28,7 +29,9 @@ var blogClient blogMicroV1.BlogClient
 
 func getBlogClient() blogMicroV1.BlogClient {
 	if blogClient == nil {
-		blogClient = blogMicroV1.NewBlogClient(grpcx.Client.MustNewGrpcClientConn("blog"))
+		blogClient = blogMicroV1.NewBlogClient(grpcx.Client.MustNewGrpcClientConn("blog", grpcx.Client.ChainUnary(
+			logging2.UnaryCLogger,
+		)))
 	}
 	return blogClient
 }
@@ -201,11 +204,11 @@ func (c *sBlog) BlogBatDelete(ctx context.Context, req *v1.BlogBatDeleteReq) (re
 			return
 		}
 		if ret.Blog == nil {
-			err = gerror.NewCodef(gcode.CodeBusinessValidationFailed, "博客不存在:%d", id)
+			err = gerror.NewCodef(gcode.CodeBusinessValidationFailed, "博客不存在:%s", id)
 			return
 		}
 		if ret.Blog.Nickname != currentUser.Nickname {
-			err = gerror.NewCodef(gcode.CodeBusinessValidationFailed, "只能删除自己的博客:%d", id)
+			err = gerror.NewCodef(gcode.CodeBusinessValidationFailed, "只能删除自己的博客:%s", id)
 			return
 		}
 		ids = append(ids, id)

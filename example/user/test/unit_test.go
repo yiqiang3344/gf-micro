@@ -9,6 +9,7 @@ import (
 	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/util/gconv"
+	logging2 "github.com/yiqiang3344/gf-micro/logging"
 	"github.com/yiqiang3344/gf-micro/testWithExcel"
 	"strings"
 	"time"
@@ -32,7 +33,9 @@ func init() {
 	cmd.GetGrpcMiddleware()(ctx)
 
 	// 客户端初始化
-	userClient = v1.NewUserClient(grpcx.Client.MustNewGrpcClientConn("user"))
+	userClient = v1.NewUserClient(grpcx.Client.MustNewGrpcClientConn("user", grpcx.Client.ChainUnary(
+		logging2.UnaryCLogger,
+	)))
 }
 
 type testInfo struct {

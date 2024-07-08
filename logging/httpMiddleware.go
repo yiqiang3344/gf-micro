@@ -1,12 +1,18 @@
 package logging
 
 import (
+	"bytes"
+	"fmt"
 	"github.com/gogf/gf/v2/encoding/gjson"
+	"github.com/gogf/gf/v2/net/gclient"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/yiqiang3344/gf-micro/response"
+	"io"
+	"net/http"
+	"time"
 )
 
 func MiddlewareLogFormatJson(r *ghttp.Request) {
@@ -42,7 +48,7 @@ func MiddlewareHandlerAccessLog(r *ghttp.Request) {
 		Scheme:   scheme,
 		Method:   r.Method,
 		Host:     r.Host,
-		Url:      r.URL.Path,
+		Path:     r.URL.Path,
 		Cost:     float64(gtime.TimestampMilli()-r.EnterTime.TimestampMilli()) / 1000,
 		Req:      body,
 		Res:      res,
@@ -62,4 +68,36 @@ func MiddlewareHandlerErrorLog(r *ghttp.Request) {
 	ErrorLog{
 		Method: r.Method,
 	}.Log(r.Context(), err)
+}
+
+func MiddlewareClientLog(c *gclient.Client, r *http.Request) (response *gclient.Response, err error) {
+	var (
+		ctx    = r.Context()
+		start  = time.Now()
+		scheme = "http"
+		proto  = r.Header.Get("X-Forwarded-Proto")
+	)
+	if r.TLS != nil || gstr.Equal(proto, "https") {
+		scheme = "https"
+	}
+	bodyBytes, _ := io.ReadAll(r.Body)
+	r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+	req, _ := gstr.Parse(string(bodyBytes))
+
+	response, err = c.Next(r)
+	duration := time.Since(start)
+	resBytes, _ := io.ReadAll(response.Body)
+	response.Body = io.NopCloser(bytes.NewBuffer(resBytes))
+	HttpClientLog{
+		HttpCode: response.StatusCode,
+		Scheme:   scheme,
+		Method:   r.Method,
+		Host:     r.Host,
+		Path:     r.URL.Path,
+		Cost:     fmt.Sprintf("%.3fms", float64(duration)/1e6),
+		Req:      req,
+		Res:      string(resBytes),
+		Header:   r.Header,
+	}.Log(ctx)
+	return
 }

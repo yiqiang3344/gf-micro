@@ -3,12 +3,13 @@ package logging
 import (
 	"context"
 	"fmt"
+	"github.com/golang/protobuf/proto"
 	"google.golang.org/grpc"
 	"time"
 )
 
-// UnaryLogger is the default unary interceptor for logging purpose.
-func UnaryLogger(
+// UnarySLogger 服务端日志拦截器
+func UnarySLogger(
 	ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler,
 ) (interface{}, error) {
 	var (
@@ -21,15 +22,34 @@ func UnaryLogger(
 	return res, err
 }
 
-// handleAccessLog handles the access logging for server.
+// UnaryCLogger 客户端日志拦截器
+func UnaryCLogger(ctx context.Context, method string, req, reply any, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+	start := time.Now()
+	err := invoker(ctx, method, req, reply, cc, opts...)
+	duration := time.Since(start)
+	handleClientLog(ctx, method, duration, req.(proto.Message), reply.(proto.Message), err)
+	return err
+}
+
+// handleAccessLog 处理服务端访问日志
 func handleAccessLog(
 	ctx context.Context, err error, duration time.Duration, info *grpc.UnaryServerInfo, req, res interface{},
 ) {
 	GrpcAccessLog{
-		Method: info.FullMethod,
-		Cost:   fmt.Sprintf("%.3fms", float64(duration)/1e6),
-		Req:    req,
-		Res:    res,
+		Path: info.FullMethod,
+		Cost: fmt.Sprintf("%.3fms", float64(duration)/1e6),
+		Req:  req,
+		Res:  res,
+	}.Log(ctx, err)
+}
+
+// handleClientLog 处理客户端对外访问的日志
+func handleClientLog(ctx context.Context, path string, duration time.Duration, req, res interface{}, err error) {
+	GrpcClientLog{
+		Path: path,
+		Cost: fmt.Sprintf("%.3fms", float64(duration)/1e6),
+		Req:  req,
+		Res:  res,
 	}.Log(ctx, err)
 }
 

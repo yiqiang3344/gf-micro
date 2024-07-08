@@ -6,7 +6,7 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 )
 
-type GrpcAccessLog struct {
+type GrpcClientLog struct {
 	Path  string      `json:"path"`
 	Cost  string      `json:"cost"`
 	Req   interface{} `json:"req"`
@@ -14,13 +14,7 @@ type GrpcAccessLog struct {
 	Error errorI      `json:"error"`
 }
 
-type errorI struct {
-	Code    int         `json:"code"`
-	Message string      `json:"message"`
-	Detail  interface{} `json:"detail"`
-}
-
-func (l GrpcAccessLog) Log(ctx context.Context, err ...error) {
+func (l GrpcClientLog) Log(ctx context.Context, err ...error) {
 	if len(err) > 0 && err[0] != nil {
 		code := gerror.Code(err[0])
 		e := errorI{
@@ -33,5 +27,5 @@ func (l GrpcAccessLog) Log(ctx context.Context, err ...error) {
 		}
 		l.Error = e
 	}
-	g.Log("access").Info(ctx, l)
+	g.Log("webclient").Info(ctx, l)
 }

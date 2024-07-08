@@ -9,6 +9,7 @@ import (
 	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/util/gconv"
+	logging2 "github.com/yiqiang3344/gf-micro/logging"
 	"github.com/yiqiang3344/gf-micro/testWithExcel"
 	"strings"
 	"time"
@@ -22,7 +23,7 @@ import (
 )
 
 var (
-	userClient v1.BlogClient
+	blogClient v1.BlogClient
 )
 
 func init() {
@@ -32,7 +33,9 @@ func init() {
 	cmd.GetGrpcMiddleware()(ctx)
 
 	// 客户端初始化
-	userClient = v1.NewBlogClient(grpcx.Client.MustNewGrpcClientConn("blog"))
+	blogClient = v1.NewBlogClient(grpcx.Client.MustNewGrpcClientConn("blog", grpcx.Client.ChainUnary(
+		logging2.UnaryCLogger,
+	)))
 }
 
 type testInfo struct {
@@ -94,33 +97,33 @@ func do(t *testing.T, info testInfo) {
 			case "create":
 				req := &v1.CreateReq{}
 				gconv.ConvertWithRefer(caseInfo.Body, req)
-				res, err1 = userClient.Create(ctx, req)
+				res, err1 = blogClient.Create(ctx, req)
 			case "detail":
 				req := &v1.GetOneReq{}
 				gconv.ConvertWithRefer(caseInfo.Body, req)
-				res, err1 = userClient.GetOne(ctx, req)
+				res, err1 = blogClient.GetOne(ctx, req)
 			case "edit":
 				req := &v1.EditReq{}
 				gconv.ConvertWithRefer(caseInfo.Body, req)
-				res, err1 = userClient.Edit(ctx, req)
+				res, err1 = blogClient.Edit(ctx, req)
 			case "list":
 				req := &v1.GetListReq{}
 				gconv.ConvertWithRefer(caseInfo.Body, req)
-				res, err1 = userClient.GetList(ctx, req)
+				res, err1 = blogClient.GetList(ctx, req)
 			case "delete":
 				req := &v1.DeleteReq{}
 				gconv.ConvertWithRefer(caseInfo.Body, req)
-				res, err1 = userClient.Delete(ctx, req)
+				res, err1 = blogClient.Delete(ctx, req)
 			case "batDelete":
 				req := &v1.BatDeleteReq{}
 				if caseInfo.Body["ids"] != "" {
 					req.Ids = strings.Split(caseInfo.Body["ids"], ",")
 				}
-				res, err1 = userClient.BatDelete(ctx, req)
+				res, err1 = blogClient.BatDelete(ctx, req)
 			case "batDeleteStatus":
 				req := &v1.GetBatDeleteStatusReq{}
 				gconv.ConvertWithRefer(caseInfo.Body, req)
-				res, err1 = userClient.GetBatDeleteStatus(ctx, req)
+				res, err1 = blogClient.GetBatDeleteStatus(ctx, req)
 			}
 			ret1, _ := json.Marshal(map[string]interface{}{
 				"res": res,

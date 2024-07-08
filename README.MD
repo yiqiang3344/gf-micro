@@ -28,11 +28,13 @@
 ## 日志
 
 - [formatJson.go](logging%2FformatJson.go) 日志json化处理，可在配置中配置需要json化的日志目录。
-- [httpMiddleware.go](logging%2FhttpMiddleware.go) http日志中间件，主要为请求日志和错误的收集逻辑。
-- [grpcUnary.go](logging%2FgrpcUnary.go) grpc日志中间件，主要为请求日志和错误的收集逻辑。
-- [httpAccess.go](logging%2FhttpAccess.go) http请求日志，规范了请求日志格式及内容。
-- [grpcAccess.go](logging%2FgrpcAccess.go) grpc请求日志，规范了请求日志格式及内容。
 - [error.go](logging%2Ferror.go) 错误日志，规范了错误日志格式及内容。
+- [grpcUnary.go](logging%2FgrpcUnary.go) grpc日志中间件，主要为请求日志和错误的收集逻辑。
+- [grpcAccess.go](logging%2FgrpcAccess.go) grpc请求日志，规范了请求日志格式及内容。
+- [grpcClient.go](logging%2FgrpcClient.go) grpc客户端拦截器，主要用来收集grpc请求日志。
+- [httpMiddleware.go](logging%2FhttpMiddleware.go) http日志中间件，主要为请求日志和错误的收集逻辑。
+- [httpAccess.go](logging%2FhttpAccess.go) http请求日志，规范了请求日志格式及内容。
+- [httpClient.go](logging%2FhttpClient.go) http客户端拦截器，主要用来收集http请求日志。
 
 ## 响应
 
@@ -47,6 +49,6 @@
 
 # 示例
 
-- [user](example%2Fuser) 简单的用户grpc微服务，带日志，带数据库访问，带redis缓存。
-- [blog](example%2Fblog) 简单的博客grpc微服务，带日志，带数据库访问，带redis缓存。
+- [user](example%2Fuser) 简单的用户grpc微服务，带日志，带数据库访问，带redis缓存，带单元测试。
+- [blog](example%2Fblog) 简单的博客grpc微服务，带日志，带数据库访问，带redis缓存，带单元测试。
 - [web](example%2Fweb) 简单的http服务系统作为user和blog的对外入口，带鉴权，带日志，带缓存，带健康检查，带单元测试和全流程测试。

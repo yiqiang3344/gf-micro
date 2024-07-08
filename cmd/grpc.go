@@ -30,8 +30,8 @@ func GetGrpcCmdFunc(middleware MiddlewareForCmd, grpcRegFunc GrpcRegFunc) func(c
 		c := grpcx.Server.NewConfig()
 		c.Options = append(c.Options, []grpc.ServerOption{
 			grpcx.Server.ChainUnary(
+				logging.UnarySLogger,
 				grpcx.Server.UnaryValidate,
-				logging.UnaryLogger,
 			)}...,
 		)
 		s := grpcx.Server.New(c)
