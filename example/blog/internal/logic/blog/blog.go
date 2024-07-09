@@ -11,14 +11,12 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/gf/v2/util/guid"
 	"github.com/yiqiang3344/gf-micro/cache"
-	"github.com/yiqiang3344/gf-micro/example/blog/api/pbentity"
 	"github.com/yiqiang3344/gf-micro/example/blog/internal/dao"
 	"github.com/yiqiang3344/gf-micro/example/blog/internal/logging"
 	"github.com/yiqiang3344/gf-micro/example/blog/internal/model/do"
 	"github.com/yiqiang3344/gf-micro/example/blog/internal/model/entity"
 	"github.com/yiqiang3344/gf-micro/example/blog/internal/service"
 	rocketmq_client "github.com/yiqiang3344/rocketmq-client-go"
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"time"
 )
 
@@ -109,8 +107,7 @@ func (s *sBlog) Edit(ctx context.Context, id uint64, title string, content strin
 	return
 }
 
-func (s *sBlog) GetById(ctx context.Context, id uint64) (ret *pbentity.Blog, err error) {
-	var blog *entity.Blog
+func (s *sBlog) GetById(ctx context.Context, id uint64) (blog *entity.Blog, err error) {
 	err = dao.Blog.Ctx(ctx).Cache(gdb.CacheOption{
 		Duration: time.Hour,
 		Name:     cache.GetDbCacheKey(dao.Blog.Table(), fmt.Sprintf("GetById:%d", id)),
@@ -120,32 +117,17 @@ func (s *sBlog) GetById(ctx context.Context, id uint64) (ret *pbentity.Blog, err
 	if err != nil {
 		return
 	}
-	if blog != nil {
-		ret = &pbentity.Blog{}
-		gconv.ConvertWithRefer(blog, ret)
-		ret.CreateAt = timestamppb.New(blog.CreateAt.Time)
-		ret.UpdateAt = timestamppb.New(blog.UpdateAt.Time)
-	}
 	return
 }
 
-func (s *sBlog) GetList(ctx context.Context) (list []*pbentity.Blog, err error) {
-	var listRet []entity.Blog
+func (s *sBlog) GetList(ctx context.Context) (list []*entity.Blog, err error) {
 	err = dao.Blog.Ctx(ctx).Cache(gdb.CacheOption{
 		Duration: time.Hour,
 		Name:     cache.GetDbCacheKey(dao.Blog.Table(), "GetList"),
-	}).Scan(&listRet)
+	}).Scan(&list)
 	if err != nil {
 		return
 	}
-	for _, blog := range listRet {
-		b := &pbentity.Blog{}
-		gconv.ConvertWithRefer(blog, b)
-		b.CreateAt = timestamppb.New(blog.CreateAt.Time)
-		b.UpdateAt = timestamppb.New(blog.UpdateAt.Time)
-		list = append(list, b)
-	}
-
 	return
 }
 

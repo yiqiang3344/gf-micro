@@ -85,12 +85,12 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20240604185151-ef581f913117 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240604185151-ef581f913117 // indirect
 	google.golang.org/grpc v1.64.0 // indirect
-	google.golang.org/protobuf v1.34.1 // indirect
+	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/gogf/gf/v2 => github.com/yiqiang3344/gf/v2 v2.0.0-20240621105408-0002476b1f0f
+replace github.com/gogf/gf/v2 => github.com/yiqiang3344/gf/v2 v2.0.0-20240709060659-c8e5e2035911
 
 replace github.com/yiqiang3344/gf-micro/example/user v0.0.0 => ../user
 

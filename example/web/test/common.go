@@ -36,7 +36,7 @@ func init() {
 
 func GetClient(ctx context.Context, token ...string) *gclient.Client {
 	if Port == 0 {
-		Port = gconv.Int(gstr.Split(g.Cfg().MustGet(context.Background(), "server.address").String(), ":")[1])
+		Port = gconv.Int(gstr.Split(g.Cfg().MustGet(ctx, "server.address").String(), ":")[1])
 	}
 
 	prefix := fmt.Sprintf("http://127.0.0.1:%d", Port)

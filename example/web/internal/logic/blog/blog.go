@@ -11,7 +11,6 @@ import (
 	"strings"
 	v1 "web/api/blog/v1"
 	"web/internal/logging"
-	"web/internal/model"
 	"web/internal/service"
 )
 
@@ -98,7 +97,7 @@ func (c *sBlog) BlogDetail(ctx context.Context, req *v1.BlogDetailReq) (res *v1.
 		err = gerror.NewCode(gcode.CodeBusinessValidationFailed, "博客不存在")
 		return
 	}
-	res.BlogDetailOutput = &model.BlogDetailOutput{
+	res.BlogDetailOutput = &v1.BlogDetailOutput{
 		Id:       ret.Blog.Id,
 		Title:    ret.Blog.Title,
 		Content:  ret.Blog.Content,
@@ -109,14 +108,14 @@ func (c *sBlog) BlogDetail(ctx context.Context, req *v1.BlogDetailReq) (res *v1.
 
 func (c *sBlog) BlogList(ctx context.Context, req *v1.BlogListReq) (res *v1.BlogListRes, err error) {
 	res = &v1.BlogListRes{
-		List: []*model.BlogDetailOutput{},
+		List: []*v1.BlogDetailOutput{},
 	}
 	ret, err := getBlogClient().GetList(ctx, &blogMicroV1.GetListReq{})
 	if err != nil {
 		return
 	}
 	for _, v := range ret.List {
-		res.List = append(res.List, &model.BlogDetailOutput{
+		res.List = append(res.List, &v1.BlogDetailOutput{
 			Id:       v.Id,
 			Title:    v.Title,
 			Content:  v.Content,

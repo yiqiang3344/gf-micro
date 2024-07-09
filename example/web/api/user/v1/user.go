@@ -2,7 +2,6 @@ package v1
 
 import (
 	"github.com/gogf/gf/v2/frame/g"
-	"web/internal/model"
 )
 
 type UserCreateReq struct {
@@ -32,5 +31,9 @@ type UserDetailReq struct {
 	g.Meta `path:"/user/detail" tags:"User" method:"post,get" summary:"用户/详情"`
 }
 type UserDetailRes struct {
-	*model.UserDetailOutput
+	*UserDetailOutput
+}
+type UserDetailOutput struct {
+	Id       uint32 `json:"id" dc:"ID"`
+	Nickname string `json:"nickname" dc:"昵称"`
 }

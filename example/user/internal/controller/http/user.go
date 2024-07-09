@@ -13,15 +13,14 @@ var (
 
 type cUser struct{}
 
-func (c *cUser) UserDetail(ctx context.Context, req *v1.UserDetailReq) (res *v1.UserDetailRes, err error) {
+func (c *cUser) UserGetOne(ctx context.Context, req *v1.UserGetOneReq) (res *v1.UserGetOneRes, err error) {
 	ret, err := service.User().GetById(ctx, req.Id)
 	if err != nil {
 		return
 	}
 	if ret != nil {
-		res = &v1.UserDetailRes{}
+		res = &v1.UserGetOneRes{}
 		gconv.ConvertWithRefer(ret, res)
-		res.CreateAt = ret.CreateAt.AsTime().Format("2006-01-02 15:04:05")
 	}
 	return
 }

@@ -11,7 +11,6 @@ import (
 	logging2 "github.com/yiqiang3344/gf-micro/logging"
 	v1 "web/api/user/v1"
 	"web/internal/logging"
-	"web/internal/model"
 	"web/internal/service"
 )
 
@@ -137,7 +136,7 @@ func (s *sUser) UserDetail(ctx context.Context, req *v1.UserDetailReq) (res *v1.
 		err = gerror.NewCode(gcode.CodeBusinessValidationFailed, "用户不存在")
 		return
 	}
-	res.UserDetailOutput = &model.UserDetailOutput{
+	res.UserDetailOutput = &v1.UserDetailOutput{
 		Id:       ret.User.Id,
 		Nickname: ret.User.Nickname,
 	}

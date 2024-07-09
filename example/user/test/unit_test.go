@@ -8,6 +8,9 @@ import (
 	_ "github.com/gogf/gf/contrib/nosql/redis/v2"
 	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
 	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/gclient"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	logging2 "github.com/yiqiang3344/gf-micro/logging"
 	"github.com/yiqiang3344/gf-micro/testWithExcel"
@@ -31,6 +34,8 @@ func init() {
 
 	//初始化grpc全局中间件
 	cmd.GetGrpcMiddleware()(ctx)
+	//初始化http全局中间件
+	cmd.GetHttpMiddleware()(ctx)
 
 	// 客户端初始化
 	userClient = v1.NewUserClient(grpcx.Client.MustNewGrpcClientConn("user", grpcx.Client.ChainUnary(
@@ -51,7 +56,7 @@ func TestUnit(t *testing.T) {
 
 	funcListMap.Set("create", testInfo{filePath: "./unitExcel/注册.xlsx"})
 	funcListMap.Set("login", testInfo{filePath: "./unitExcel/登录.xlsx"})
-	funcListMap.Set("detail", testInfo{filePath: "./unitExcel/详情.xlsx"})
+	funcListMap.Set("getOne", testInfo{filePath: "./unitExcel/详情.xlsx"})
 	funcListMap.Set("logout", testInfo{filePath: "./unitExcel/登出.xlsx"})
 
 	if !flag.Parsed() {
@@ -86,33 +91,47 @@ func do(t *testing.T, info testInfo) {
 			if caseInfo.Extend["delayTime"] != "" {
 				time.Sleep(gconv.Duration(caseInfo.Extend["delayTime"]) * time.Second)
 			}
-			var (
-				res  any
-				err1 error
-			)
-			switch info.route {
-			case "create":
-				req := &v1.CreateReq{}
-				gconv.ConvertWithRefer(caseInfo.Body, req)
-				res, err1 = userClient.Create(ctx, req)
-			case "login":
-				req := &v1.LoginReq{}
-				gconv.ConvertWithRefer(caseInfo.Body, req)
-				res, err1 = userClient.Login(ctx, req)
-			case "detail":
-				req := &v1.GetOneReq{}
-				gconv.ConvertWithRefer(caseInfo.Body, req)
-				res, err1 = userClient.GetOne(ctx, req)
-			case "logout":
-				req := &v1.LogoutReq{}
-				gconv.ConvertWithRefer(caseInfo.Body, req)
-				res, err1 = userClient.Logout(ctx, req)
+
+			if caseInfo.Extend["serviceType"] == "http" {
+				c := GetClient(ctx)
+				switch caseInfo.Extend["method"] {
+				case "post":
+					ret = c.PostContent(ctx, caseInfo.Extend["path"], caseInfo.Body)
+				case "get":
+					ret = c.GetContent(ctx, caseInfo.Extend["path"], caseInfo.Body)
+				default:
+					err = fmt.Errorf("[%s]的http接口[%s]使用类不支持的method:%s", info.route, caseInfo.Extend["path"], caseInfo.Extend["method"])
+				}
+			} else {
+				var (
+					res  any
+					err1 error
+				)
+				switch info.route {
+				case "create":
+					req := &v1.CreateReq{}
+					gconv.ConvertWithRefer(caseInfo.Body, req)
+					res, err1 = userClient.Create(ctx, req)
+				case "login":
+					req := &v1.LoginReq{}
+					gconv.ConvertWithRefer(caseInfo.Body, req)
+					res, err1 = userClient.Login(ctx, req)
+				case "getOne":
+					req := &v1.GetOneReq{}
+					gconv.ConvertWithRefer(caseInfo.Body, req)
+					res, err1 = userClient.GetOne(ctx, req)
+				case "logout":
+					req := &v1.LogoutReq{}
+					gconv.ConvertWithRefer(caseInfo.Body, req)
+					res, err1 = userClient.Logout(ctx, req)
+				}
+				ret1, _ := json.Marshal(map[string]interface{}{
+					"res": res,
+					"err": err1,
+				})
+				ret = string(ret1)
 			}
-			ret1, _ := json.Marshal(map[string]interface{}{
-				"res": res,
-				"err": err1,
-			})
-			ret = string(ret1)
+
 			return
 		}),
 	)
@@ -120,4 +139,20 @@ func do(t *testing.T, info testInfo) {
 		panic(fmt.Errorf("接口%s运行异常:%v", info.route, err))
 	}
 	o.Run(context.Background())
+}
+
+var (
+	Port int
+)
+
+func GetClient(ctx context.Context) *gclient.Client {
+	if Port == 0 {
+		Port = gconv.Int(gstr.Split(g.Cfg().MustGet(ctx, "server.address").String(), ":")[1])
+	}
+
+	prefix := fmt.Sprintf("http://127.0.0.1:%d", Port)
+	client := g.Client()
+	client.Use(logging2.MiddlewareClientLog)
+	client.SetPrefix(prefix)
+	return client
 }

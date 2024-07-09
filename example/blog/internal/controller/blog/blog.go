@@ -5,6 +5,7 @@ import (
 	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
 	"github.com/gogf/gf/v2/util/gconv"
 	v1 "github.com/yiqiang3344/gf-micro/example/blog/api/blog/v1"
+	"github.com/yiqiang3344/gf-micro/example/blog/api/pbentity"
 	"github.com/yiqiang3344/gf-micro/example/blog/internal/service"
 )
 
@@ -30,13 +31,27 @@ func (*Controller) Edit(ctx context.Context, req *v1.EditReq) (res *v1.EditRes, 
 
 func (*Controller) GetOne(ctx context.Context, req *v1.GetOneReq) (res *v1.GetOneRes, err error) {
 	res = &v1.GetOneRes{}
-	res.Blog, err = service.Blog().GetById(ctx, gconv.Uint64(req.Id))
+	ret, err := service.Blog().GetById(ctx, gconv.Uint64(req.Id))
+	if err != nil {
+		return
+	}
+	if ret != nil {
+		gconv.ConvertWithRefer(ret, &res.Blog)
+	}
 	return
 }
 
 func (*Controller) GetList(ctx context.Context, req *v1.GetListReq) (res *v1.GetListRes, err error) {
 	res = &v1.GetListRes{}
-	res.List, err = service.Blog().GetList(ctx)
+	list, err := service.Blog().GetList(ctx)
+	if err != nil {
+		return
+	}
+	for _, v := range list {
+		b := &pbentity.Blog{}
+		gconv.ConvertWithRefer(v, &b)
+		res.List = append(res.List, b)
+	}
 	return
 }
 

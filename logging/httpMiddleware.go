@@ -77,13 +77,20 @@ func MiddlewareClientLog(c *gclient.Client, r *http.Request) (response *gclient.
 		start  = time.Now()
 		scheme = "http"
 		proto  = r.Header.Get("X-Forwarded-Proto")
+		req    = map[string]interface{}{}
 	)
 	if r.TLS != nil || gstr.Equal(proto, "https") {
 		scheme = "https"
 	}
-	bodyBytes, _ := io.ReadAll(r.Body)
-	r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
-	req, _ := gstr.Parse(string(bodyBytes))
+
+	switch r.Method {
+	case http.MethodGet, http.MethodOptions, http.MethodHead:
+		req, _ = gstr.Parse(r.URL.Query().Encode())
+	default:
+		bodyBytes, _ := io.ReadAll(r.Body)
+		r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+		req, _ = gstr.Parse(string(bodyBytes))
+	}
 
 	response, err = c.Next(r)
 	duration := time.Since(start)

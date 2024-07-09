@@ -2,7 +2,6 @@ package v1
 
 import (
 	"github.com/gogf/gf/v2/frame/g"
-	"web/internal/model"
 )
 
 type BlogCreateReq struct {
@@ -27,14 +26,20 @@ type BlogDetailReq struct {
 	Id     string `json:"id" v:"required#博客ID不能为空" dc:"ID"`
 }
 type BlogDetailRes struct {
-	*model.BlogDetailOutput
+	*BlogDetailOutput
 }
 
 type BlogListReq struct {
 	g.Meta `path:"/blog/list" tags:"Blog" method:"post" summary:"博客/列表"`
 }
 type BlogListRes struct {
-	List []*model.BlogDetailOutput `json:"list" dc:"博客列表"`
+	List []*BlogDetailOutput `json:"list" dc:"博客列表"`
+}
+type BlogDetailOutput struct {
+	Id       uint32 `json:"id" dc:"ID"`
+	Title    string `json:"title" dc:"标题"`
+	Content  string `json:"content" dc:"内容"`
+	Nickname string `json:"nickname" dc:"作者"`
 }
 
 type BlogDeleteReq struct {

@@ -12,7 +12,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/yiqiang3344/gf-micro v0.0.0
 	google.golang.org/grpc v1.64.0
-	google.golang.org/protobuf v1.34.1
+	google.golang.org/protobuf v1.34.2
 )
 
 require (
@@ -89,6 +89,8 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/gogf/gf/v2 => github.com/yiqiang3344/gf/v2 v2.0.0-20240621105408-0002476b1f0f
+replace github.com/gogf/gf/v2 => github.com/yiqiang3344/gf/v2 v2.0.0-20240709060659-c8e5e2035911
+
+//replace github.com/gogf/gf/v2 v2.7.1 => ../../../gf
 
 replace github.com/yiqiang3344/gf-micro v0.0.0 => ../../

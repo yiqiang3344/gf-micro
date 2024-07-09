@@ -10,13 +10,11 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/yiqiang3344/gf-micro/cache"
-	"github.com/yiqiang3344/gf-micro/example/user/api/pbentity"
 	"github.com/yiqiang3344/gf-micro/example/user/internal/dao"
 	"github.com/yiqiang3344/gf-micro/example/user/internal/logging"
 	"github.com/yiqiang3344/gf-micro/example/user/internal/model/do"
 	"github.com/yiqiang3344/gf-micro/example/user/internal/model/entity"
 	"github.com/yiqiang3344/gf-micro/example/user/internal/service"
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"time"
 )
 
@@ -54,7 +52,7 @@ func (s *sUser) Create(ctx context.Context, nickname string, password string) (u
 	return
 }
 
-func (s *sUser) Login(ctx context.Context, nickname string, password string) (token string, ret *pbentity.User, err error) {
+func (s *sUser) Login(ctx context.Context, nickname string, password string) (token string, user *entity.User, err error) {
 	defer func() {
 		if e := recover(); e != nil {
 			err = e.(error)
@@ -69,7 +67,7 @@ func (s *sUser) Login(ctx context.Context, nickname string, password string) (to
 			}.Log(ctx)
 		}
 	}()
-	var user *entity.User
+	// 注意，如果要使用缓存的话，应该使用entity,而不是pbentity，否则pbentity中有timestamppb.Timestamp类型数据时会报错，具体可见 https://github.com/gogf/gf/issues/3641
 	err = dao.User.Ctx(ctx).Cache(gdb.CacheOption{
 		Duration: time.Hour,
 		Name:     cache.GetDbCacheKey(dao.User.Table(), fmt.Sprintf("LoginByPassword:%s", gmd5.MustEncryptString(nickname+password))),
@@ -86,12 +84,6 @@ func (s *sUser) Login(ctx context.Context, nickname string, password string) (to
 	}
 	if err != nil {
 		return
-	}
-	if user != nil {
-		ret = &pbentity.User{}
-		gconv.ConvertWithRefer(user, ret)
-		ret.CreateAt = timestamppb.New(user.CreateAt.Time)
-		ret.UpdateAt = timestamppb.New(user.UpdateAt.Time)
 	}
 
 	//缓存的token已存在则直接使用，不存在则生成新的
@@ -128,8 +120,7 @@ func (s *sUser) Logout(ctx context.Context, uid string) (err error) {
 	return
 }
 
-func (s *sUser) GetById(ctx context.Context, uid string) (ret *pbentity.User, err error) {
-	var user *entity.User
+func (s *sUser) GetById(ctx context.Context, uid string) (user *entity.User, err error) {
 	err = dao.User.Ctx(ctx).Cache(gdb.CacheOption{
 		Duration: time.Hour,
 		Name:     cache.GetDbCacheKey(dao.User.Table(), fmt.Sprintf("GetById:%s", uid)),
@@ -139,16 +130,10 @@ func (s *sUser) GetById(ctx context.Context, uid string) (ret *pbentity.User, er
 	if err != nil {
 		return
 	}
-	if user != nil {
-		ret = &pbentity.User{}
-		gconv.ConvertWithRefer(user, ret)
-		ret.CreateAt = timestamppb.New(user.CreateAt.Time)
-		ret.UpdateAt = timestamppb.New(user.UpdateAt.Time)
-	}
 	return
 }
 
-func (s *sUser) GetByToken(ctx context.Context, token string) (ret *pbentity.User, err error) {
+func (s *sUser) GetByToken(ctx context.Context, token string) (ret *entity.User, err error) {
 	uid, err := Parse(ctx, token)
 	if err != nil {
 		return

@@ -3,7 +3,9 @@ package user
 import (
 	"context"
 	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
+	"github.com/gogf/gf/v2/util/gconv"
 	v1 "github.com/yiqiang3344/gf-micro/example/user/api/user/v1"
+	"github.com/yiqiang3344/gf-micro/example/user/internal/model/entity"
 	"github.com/yiqiang3344/gf-micro/example/user/internal/service"
 )
 
@@ -23,19 +25,38 @@ func (*Controller) Create(ctx context.Context, req *v1.CreateReq) (res *v1.Creat
 
 func (*Controller) Login(ctx context.Context, req *v1.LoginReq) (res *v1.LoginRes, err error) {
 	res = &v1.LoginRes{}
-	res.Token, res.User, err = service.User().Login(ctx, req.Nickname, req.Password)
+	ret := &entity.User{}
+	res.Token, ret, err = service.User().Login(ctx, req.Nickname, req.Password)
+	if err != nil {
+		return
+	}
+	if ret != nil {
+		gconv.ConvertWithRefer(ret, &res.User)
+	}
 	return
 }
 
 func (*Controller) GetOne(ctx context.Context, req *v1.GetOneReq) (res *v1.GetOneRes, err error) {
 	res = &v1.GetOneRes{}
-	res.User, err = service.User().GetById(ctx, req.GetId())
+	ret, err := service.User().GetById(ctx, req.GetId())
+	if err != nil {
+		return
+	}
+	if ret != nil {
+		gconv.ConvertWithRefer(ret, &res.User)
+	}
 	return
 }
 
 func (*Controller) GetByToken(ctx context.Context, req *v1.GetByTokenReq) (res *v1.GetByTokenRes, err error) {
 	res = &v1.GetByTokenRes{}
-	res.User, err = service.User().GetByToken(ctx, req.GetToken())
+	ret, err := service.User().GetByToken(ctx, req.GetToken())
+	if err != nil {
+		return
+	}
+	if ret != nil {
+		gconv.ConvertWithRefer(ret, &res.User)
+	}
 	return
 }
 
