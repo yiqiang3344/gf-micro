@@ -1,15 +1,3 @@
-#apollo:
-#  AppID: "web"
-#  Cluster: "default"
-#  IP: "http://localhost:8080"
-#  NamespaceName: "application.yaml" #使用配置中心时，则把下方所有配置都放到application.yaml或拆分放到对应的namesapce中
-#  IsBackupConfig: false
-#  BackupConfigPath: ""
-#  Secret: ""
-#  SyncServerTimeout: 0
-#  MustStart: true
-#  Watch: true
-
 appName: web
 
 server:
