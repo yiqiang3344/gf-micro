@@ -5,33 +5,7 @@ import (
 	"reflect"
 )
 
-const (
-	APOLLO         = "apollo"
-	GRPC           = "grpc"
-	SERVER         = "server"
-	ROCKETMQ       = "rocketmq"
-	XXLJOB         = "xxljob"
-	OTLP           = "otlp"
-	REGISTRY       = "registry"
-	REDIS          = "redis"
-	DATABASE       = "database"
-	APPNAME        = "appName"
-	JSONFORMATLOGS = "jsonFormatLogs"
-	LOGGER         = "logger"
-)
-
 var (
-	ruleMap = map[string][]checkOpt{
-		APOLLO:   apolloRules,
-		GRPC:     grpcRules,
-		SERVER:   serverRules,
-		ROCKETMQ: rocketmqRules,
-		XXLJOB:   xxljobRules,
-		OTLP:     otlpRules,
-		REGISTRY: registryRules,
-		REDIS:    redisRules,
-		DATABASE: databaseRules,
-	}
 	commonRules = []checkOpt{
 		{Pattern: APPNAME, Level: MustInput, Kind: reflect.String, Env: []ENV{PROD, DEV}},
 		{Pattern: JSONFORMATLOGS, Level: MustInput, Kind: reflect.Slice, Extra: map[ExtraKey]interface{}{EQ: []interface{}{"access", "biz", "webclient"}}, Env: []ENV{PROD, DEV}},
@@ -44,11 +18,11 @@ var (
 		{Pattern: LOGGER + ".stdout", Level: MustInputZero, Kind: reflect.Bool, Env: []ENV{PROD}},
 		{Pattern: LOGGER + ".stdout", Level: OptionalInput, Kind: reflect.Bool, Env: []ENV{DEV}},
 		{Pattern: LOGGER + ".stdoutColorDisabled", Level: OptionalInput, Kind: reflect.Bool, Env: []ENV{PROD, DEV}},
-		{Pattern: LOGGER + ".rotateSize", Level: MustInputNotZero, Kind: reflect.Int, Extra: map[ExtraKey]interface{}{LE: 100000000}, Env: []ENV{PROD, DEV}},
+		{Pattern: LOGGER + ".rotateSize", Level: MustInputNotZero, Kind: reflect.Int64, Extra: map[ExtraKey]interface{}{LE: 100000000}, Env: []ENV{PROD, DEV}},
 		{Pattern: LOGGER + ".rotateExpire", Level: MustInputNotZero, Kind: reflect.String, Extra: map[ExtraKey]interface{}{EQ: "24h"}, Env: []ENV{PROD, DEV}},
-		{Pattern: LOGGER + ".rotateBackupLimit", Level: MustInputNotZero, Kind: reflect.Int, Extra: map[ExtraKey]interface{}{EQ: 30}, Env: []ENV{PROD, DEV}},
+		{Pattern: LOGGER + ".rotateBackupLimit", Level: MustInputNotZero, Kind: reflect.Int64, Extra: map[ExtraKey]interface{}{EQ: 30}, Env: []ENV{PROD, DEV}},
 		{Pattern: LOGGER + ".rotateBackupExpire", Level: MustInputNotZero, Kind: reflect.String, Extra: map[ExtraKey]interface{}{EQ: "720h"}, Env: []ENV{PROD, DEV}},
-		{Pattern: LOGGER + ".rotateBackupCompress", Level: OptionalInput, Kind: reflect.Int, Env: []ENV{PROD, DEV}},
+		{Pattern: LOGGER + ".rotateBackupCompress", Level: OptionalInput, Kind: reflect.Int64, Env: []ENV{PROD, DEV}},
 		{Pattern: LOGGER + ".rotateCheckInterval", Level: MustInputNotZero, Kind: reflect.String, Extra: map[ExtraKey]interface{}{EQ: "1h"}, Env: []ENV{PROD, DEV}},
 		{Pattern: LOGGER + ".access.path", Level: MustInputNotZero, Kind: reflect.String, Env: []ENV{PROD, DEV}},
 		{Pattern: LOGGER + ".access.file", Level: MustInputNotZero, Kind: reflect.String, Extra: map[ExtraKey]interface{}{EQ: "access.log"}, Env: []ENV{PROD, DEV}},
@@ -58,11 +32,11 @@ var (
 		{Pattern: LOGGER + ".access.stdout", Level: MustInputZero, Kind: reflect.Bool, Env: []ENV{PROD}},
 		{Pattern: LOGGER + ".access.stdout", Level: OptionalInput, Kind: reflect.Bool, Env: []ENV{DEV}},
 		{Pattern: LOGGER + ".access.stdoutColorDisabled", Level: OptionalInput, Kind: reflect.Bool, Env: []ENV{PROD, DEV}},
-		{Pattern: LOGGER + ".access.rotateSize", Level: MustInputNotZero, Kind: reflect.Int, Extra: map[ExtraKey]interface{}{LE: 100000000}, Env: []ENV{PROD, DEV}},
+		{Pattern: LOGGER + ".access.rotateSize", Level: MustInputNotZero, Kind: reflect.Int64, Extra: map[ExtraKey]interface{}{LE: 100000000}, Env: []ENV{PROD, DEV}},
 		{Pattern: LOGGER + ".access.rotateExpire", Level: MustInputNotZero, Kind: reflect.String, Extra: map[ExtraKey]interface{}{EQ: "24h"}, Env: []ENV{PROD, DEV}},
-		{Pattern: LOGGER + ".access.rotateBackupLimit", Level: MustInputNotZero, Kind: reflect.Int, Extra: map[ExtraKey]interface{}{EQ: 30}, Env: []ENV{PROD, DEV}},
+		{Pattern: LOGGER + ".access.rotateBackupLimit", Level: MustInputNotZero, Kind: reflect.Int64, Extra: map[ExtraKey]interface{}{EQ: 30}, Env: []ENV{PROD, DEV}},
 		{Pattern: LOGGER + ".access.rotateBackupExpire", Level: MustInputNotZero, Kind: reflect.String, Extra: map[ExtraKey]interface{}{EQ: "720h"}, Env: []ENV{PROD, DEV}},
-		{Pattern: LOGGER + ".access.rotateBackupCompress", Level: OptionalInput, Kind: reflect.Int, Env: []ENV{PROD, DEV}},
+		{Pattern: LOGGER + ".access.rotateBackupCompress", Level: OptionalInput, Kind: reflect.Int64, Env: []ENV{PROD, DEV}},
 		{Pattern: LOGGER + ".access.rotateCheckInterval", Level: MustInputNotZero, Kind: reflect.String, Extra: map[ExtraKey]interface{}{EQ: "1h"}, Env: []ENV{PROD, DEV}},
 		{Pattern: LOGGER + ".error.path", Level: MustInputNotZero, Kind: reflect.String, Env: []ENV{PROD, DEV}},
 		{Pattern: LOGGER + ".error.file", Level: MustInputNotZero, Kind: reflect.String, Extra: map[ExtraKey]interface{}{EQ: "error.log"}, Env: []ENV{PROD, DEV}},
@@ -72,11 +46,11 @@ var (
 		{Pattern: LOGGER + ".error.stdout", Level: MustInputZero, Kind: reflect.Bool, Env: []ENV{PROD}},
 		{Pattern: LOGGER + ".error.stdout", Level: OptionalInput, Kind: reflect.Bool, Env: []ENV{DEV}},
 		{Pattern: LOGGER + ".error.stdoutColorDisabled", Level: OptionalInput, Kind: reflect.Bool, Env: []ENV{PROD, DEV}},
-		{Pattern: LOGGER + ".error.rotateSize", Level: MustInputNotZero, Kind: reflect.Int, Extra: map[ExtraKey]interface{}{LE: 100000000}, Env: []ENV{PROD, DEV}},
+		{Pattern: LOGGER + ".error.rotateSize", Level: MustInputNotZero, Kind: reflect.Int64, Extra: map[ExtraKey]interface{}{LE: 100000000}, Env: []ENV{PROD, DEV}},
 		{Pattern: LOGGER + ".error.rotateExpire", Level: MustInputNotZero, Kind: reflect.String, Extra: map[ExtraKey]interface{}{EQ: "24h"}, Env: []ENV{PROD, DEV}},
-		{Pattern: LOGGER + ".error.rotateBackupLimit", Level: MustInputNotZero, Kind: reflect.Int, Extra: map[ExtraKey]interface{}{EQ: 30}, Env: []ENV{PROD, DEV}},
+		{Pattern: LOGGER + ".error.rotateBackupLimit", Level: MustInputNotZero, Kind: reflect.Int64, Extra: map[ExtraKey]interface{}{EQ: 30}, Env: []ENV{PROD, DEV}},
 		{Pattern: LOGGER + ".error.rotateBackupExpire", Level: MustInputNotZero, Kind: reflect.String, Extra: map[ExtraKey]interface{}{EQ: "720h"}, Env: []ENV{PROD, DEV}},
-		{Pattern: LOGGER + ".error.rotateBackupCompress", Level: OptionalInput, Kind: reflect.Int, Env: []ENV{PROD, DEV}},
+		{Pattern: LOGGER + ".error.rotateBackupCompress", Level: OptionalInput, Kind: reflect.Int64, Env: []ENV{PROD, DEV}},
 		{Pattern: LOGGER + ".error.rotateCheckInterval", Level: MustInputNotZero, Kind: reflect.String, Extra: map[ExtraKey]interface{}{EQ: "1h"}, Env: []ENV{PROD, DEV}},
 		{Pattern: LOGGER + ".webclient.path", Level: MustInputNotZero, Kind: reflect.String, Env: []ENV{PROD, DEV}},
 		{Pattern: LOGGER + ".webclient.file", Level: MustInputNotZero, Kind: reflect.String, Extra: map[ExtraKey]interface{}{EQ: "webclient.log"}, Env: []ENV{PROD, DEV}},
@@ -86,11 +60,11 @@ var (
 		{Pattern: LOGGER + ".webclient.stdout", Level: MustInputZero, Kind: reflect.Bool, Env: []ENV{PROD}},
 		{Pattern: LOGGER + ".webclient.stdout", Level: OptionalInput, Kind: reflect.Bool, Env: []ENV{DEV}},
 		{Pattern: LOGGER + ".webclient.stdoutColorDisabled", Level: OptionalInput, Kind: reflect.Bool, Env: []ENV{PROD, DEV}},
-		{Pattern: LOGGER + ".webclient.rotateSize", Level: MustInputNotZero, Kind: reflect.Int, Extra: map[ExtraKey]interface{}{LE: 100000000}, Env: []ENV{PROD, DEV}},
+		{Pattern: LOGGER + ".webclient.rotateSize", Level: MustInputNotZero, Kind: reflect.Int64, Extra: map[ExtraKey]interface{}{LE: 100000000}, Env: []ENV{PROD, DEV}},
 		{Pattern: LOGGER + ".webclient.rotateExpire", Level: MustInputNotZero, Kind: reflect.String, Extra: map[ExtraKey]interface{}{EQ: "24h"}, Env: []ENV{PROD, DEV}},
-		{Pattern: LOGGER + ".webclient.rotateBackupLimit", Level: MustInputNotZero, Kind: reflect.Int, Extra: map[ExtraKey]interface{}{EQ: 30}, Env: []ENV{PROD, DEV}},
+		{Pattern: LOGGER + ".webclient.rotateBackupLimit", Level: MustInputNotZero, Kind: reflect.Int64, Extra: map[ExtraKey]interface{}{EQ: 30}, Env: []ENV{PROD, DEV}},
 		{Pattern: LOGGER + ".webclient.rotateBackupExpire", Level: MustInputNotZero, Kind: reflect.String, Extra: map[ExtraKey]interface{}{EQ: "720h"}, Env: []ENV{PROD, DEV}},
-		{Pattern: LOGGER + ".webclient.rotateBackupCompress", Level: OptionalInput, Kind: reflect.Int, Env: []ENV{PROD, DEV}},
+		{Pattern: LOGGER + ".webclient.rotateBackupCompress", Level: OptionalInput, Kind: reflect.Int64, Env: []ENV{PROD, DEV}},
 		{Pattern: LOGGER + ".webclient.rotateCheckInterval", Level: MustInputNotZero, Kind: reflect.String, Extra: map[ExtraKey]interface{}{EQ: "1h"}, Env: []ENV{PROD, DEV}},
 	}
 	apolloRules = []checkOpt{
@@ -101,10 +75,10 @@ var (
 		{Pattern: "apollo.NamespaceName", Level: MustInput, Kind: reflect.String, Env: []ENV{PROD, DEV}},
 		{Pattern: "apollo.IsBackupConfig", Level: OptionalInput, Kind: reflect.Bool, Env: []ENV{PROD, DEV}},
 		{Pattern: "apollo.BackupConfigPath", Level: OptionalInput, Kind: reflect.String, Env: []ENV{PROD, DEV}},
-		{Pattern: "apollo.Secret", Level: ProposalNotEmpty, Kind: reflect.String, Env: []ENV{PROD, DEV}},
-		{Pattern: "apollo.SyncServerTimeout", Level: OptionalInput, Kind: reflect.Int, Env: []ENV{PROD, DEV}},
-		{Pattern: "apollo.MustStart", Level: ProposalNotEmpty, Kind: reflect.Bool, Env: []ENV{PROD, DEV}},
-		{Pattern: "apollo.Watch", Level: ProposalNotEmpty, Kind: reflect.Bool, Env: []ENV{PROD, DEV}},
+		{Pattern: "apollo.Secret", Level: ProposalNotZero, Kind: reflect.String, Env: []ENV{PROD, DEV}},
+		{Pattern: "apollo.SyncServerTimeout", Level: OptionalInput, Kind: reflect.Int64, Env: []ENV{PROD, DEV}},
+		{Pattern: "apollo.MustStart", Level: ProposalNotZero, Kind: reflect.Bool, Env: []ENV{PROD, DEV}},
+		{Pattern: "apollo.Watch", Level: ProposalNotZero, Kind: reflect.Bool, Env: []ENV{PROD, DEV}},
 	}
 	grpcRules = []checkOpt{
 		{Pattern: "grpc", Level: MustInput, Kind: reflect.Map, Env: []ENV{PROD, DEV}},
@@ -115,7 +89,7 @@ var (
 		{Pattern: "grpc.errorLogEnabled", Level: MustInputZero, Kind: reflect.Bool, Env: []ENV{PROD, DEV}},
 		{Pattern: "grpc.accessLogEnabled", Level: MustInputZero, Kind: reflect.Bool, Env: []ENV{PROD, DEV}},
 		{Pattern: "grpc.graceful", Level: MustInputNotZero, Kind: reflect.Bool, Env: []ENV{PROD, DEV}},
-		{Pattern: "grpc.gracefulTimeout", Level: MustInputNotZero, Kind: reflect.Int, Extra: map[ExtraKey]interface{}{GE: 2}, Env: []ENV{PROD, DEV}},
+		{Pattern: "grpc.gracefulTimeout", Level: MustInputNotZero, Kind: reflect.Int64, Extra: map[ExtraKey]interface{}{GE: 2}, Env: []ENV{PROD, DEV}},
 	}
 	serverRules = []checkOpt{
 		{Pattern: "server", Level: MustInput, Kind: reflect.Map, Env: []ENV{PROD, DEV}},
@@ -129,14 +103,14 @@ var (
 		{Pattern: "server.errorLogEnabled", Level: MustInputZero, Kind: reflect.Bool, Env: []ENV{PROD, DEV}},
 		{Pattern: "server.accessLogEnabled", Level: MustInputZero, Kind: reflect.Bool, Env: []ENV{PROD, DEV}},
 		{Pattern: "server.graceful", Level: MustInputNotZero, Kind: reflect.Bool, Env: []ENV{PROD, DEV}},
-		{Pattern: "server.gracefulTimeout", Level: MustInputNotZero, Kind: reflect.Int, Extra: map[ExtraKey]interface{}{GE: 2}, Env: []ENV{PROD, DEV}},
+		{Pattern: "server.gracefulTimeout", Level: MustInputNotZero, Kind: reflect.Int64, Extra: map[ExtraKey]interface{}{GE: 2}, Env: []ENV{PROD, DEV}},
 	}
 	rocketmqRules = []checkOpt{
 		{Pattern: "rocketmq", Level: MustInput, Kind: reflect.Map, Env: []ENV{PROD, DEV}},
 		{Pattern: "rocketmq.endpoint", Level: MustInputNotZero, Kind: reflect.String, Env: []ENV{PROD, DEV}},
 		{Pattern: "rocketmq.namespace", Level: MustInputNotZero, Kind: reflect.String, Env: []ENV{PROD, DEV}},
-		{Pattern: "rocketmq.accessKey", Level: ProposalNotEmpty, Kind: reflect.String, Env: []ENV{PROD, DEV}},
-		{Pattern: "rocketmq.accessSecret", Level: ProposalNotEmpty, Kind: reflect.String, Env: []ENV{PROD, DEV}},
+		{Pattern: "rocketmq.accessKey", Level: ProposalNotZero, Kind: reflect.String, Env: []ENV{PROD, DEV}},
+		{Pattern: "rocketmq.accessSecret", Level: ProposalNotZero, Kind: reflect.String, Env: []ENV{PROD, DEV}},
 		{Pattern: "rocketmq.logPath", Level: MustInputNotZero, Kind: reflect.String, Env: []ENV{PROD}},
 		{Pattern: "rocketmq.logPath", Level: OptionalInput, Kind: reflect.String, Env: []ENV{DEV}},
 		{Pattern: "rocketmq.logStdout", Level: MustInputZero, Kind: reflect.Bool, Env: []ENV{PROD}},
@@ -161,31 +135,27 @@ var (
 	redisRules = []checkOpt{
 		{Pattern: "redis", Level: MustInput, Kind: reflect.Map, Env: []ENV{PROD, DEV}},
 		{Pattern: "redis.default.address", Level: MustInputNotZero, Kind: reflect.String, Env: []ENV{PROD, DEV}},
-		{Pattern: "redis.default.db", Level: MustInputNotZero, Kind: reflect.Int, Env: []ENV{PROD, DEV}},
+		{Pattern: "redis.default.db", Level: MustInputNotZero, Kind: reflect.Int64, Env: []ENV{PROD, DEV}},
 		{Pattern: "redis.default.pass", Level: MustInputNotZero, Kind: reflect.String, Env: []ENV{PROD}},
 		{Pattern: "redis.default.pass", Level: OptionalInput, Kind: reflect.String, Env: []ENV{DEV}},
 	}
 	databaseRules = []checkOpt{
 		{Pattern: "database", Level: MustInput, Kind: reflect.Map, Env: []ENV{PROD, DEV}},
 		{Pattern: "database.default.link", Level: MustInputNotZero, Kind: reflect.String, Env: []ENV{PROD, DEV}},
-		{Pattern: "database.default.debug", Level: ProposalEmpty, Kind: reflect.Bool, Env: []ENV{PROD}},
+		{Pattern: "database.default.debug", Level: ProposalZero, Kind: reflect.Bool, Env: []ENV{PROD}},
 		{Pattern: "database.default.debug", Level: OptionalInput, Kind: reflect.Bool, Env: []ENV{DEV}},
 	}
 )
 
 func getRuleListMap() *gmap.ListMap {
 	m := gmap.NewListMap()
-	for _, key := range []string{
-		GRPC,
-		SERVER,
-		ROCKETMQ,
-		XXLJOB,
-		OTLP,
-		REGISTRY,
-		REDIS,
-		DATABASE,
-	} {
-		m.Set(key, ruleMap[key])
-	}
+	m.Set(GRPC, grpcRules)
+	m.Set(SERVER, serverRules)
+	m.Set(ROCKETMQ, rocketmqRules)
+	m.Set(XXLJOB, xxljobRules)
+	m.Set(OTLP, otlpRules)
+	m.Set(REGISTRY, registryRules)
+	m.Set(REDIS, redisRules)
+	m.Set(DATABASE, databaseRules)
 	return m
 }
