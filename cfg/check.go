@@ -212,6 +212,9 @@ func checkExtra(v interface{}, kind reflect.Kind, extra map[ExtraKey]interface{}
 			default:
 				ok = false
 				expect = fmt.Sprintf("%s%s", "大于", v1Str)
+				if contains([]reflect.Kind{reflect.Map, reflect.Slice}, kind) {
+					expect = fmt.Sprintf("%s%d", "长度大于", gconv.Int(v1))
+				}
 				return
 			}
 		case GE:
@@ -226,6 +229,9 @@ func checkExtra(v interface{}, kind reflect.Kind, extra map[ExtraKey]interface{}
 			default:
 				ok = false
 				expect = fmt.Sprintf("%s%s", "大于等于", v1Str)
+				if contains([]reflect.Kind{reflect.Map, reflect.Slice}, kind) {
+					expect = fmt.Sprintf("%s%d", "长度大于等于", gconv.Int(v1))
+				}
 				return
 			}
 		case LT:
@@ -240,6 +246,9 @@ func checkExtra(v interface{}, kind reflect.Kind, extra map[ExtraKey]interface{}
 			default:
 				ok = false
 				expect = fmt.Sprintf("%s%s", "小于", v1Str)
+				if contains([]reflect.Kind{reflect.Map, reflect.Slice}, kind) {
+					expect = fmt.Sprintf("%s%d", "长度小于", gconv.Int(v1))
+				}
 				return
 			}
 		case LE:
@@ -254,6 +263,9 @@ func checkExtra(v interface{}, kind reflect.Kind, extra map[ExtraKey]interface{}
 			default:
 				ok = false
 				expect = fmt.Sprintf("%s%s", "小于等于", v1Str)
+				if contains([]reflect.Kind{reflect.Map, reflect.Slice}, kind) {
+					expect = fmt.Sprintf("%s%d", "长度小于等于", gconv.Int(v1))
+				}
 				return
 			}
 		case IN:
@@ -298,11 +310,14 @@ func checkExtra(v interface{}, kind reflect.Kind, extra map[ExtraKey]interface{}
 				panic(fmt.Errorf("不支持的额外规则%v:%s", k1, v1Str))
 			case contains(floatKins, kind):
 				panic(fmt.Errorf("不支持的额外规则%v:%s", k1, v1Str))
-			case kind == reflect.Map && containsKey(v.(map[string]interface{}), v1.(string)):
-			case kind == reflect.Slice && contains(v.([]interface{}), v1):
+			case kind == reflect.Map && kt == "map[string]interface {}" && containsKey(v.(map[string]interface{}), gconv.String(v1)):
+			case kind == reflect.Slice && kt == "[]interface {}" && contains(v.([]interface{}), v1):
 			default:
 				ok = false
 				expect = fmt.Sprintf("%s%s", "包含", v1Str)
+				if reflect.Map == kind {
+					expect = fmt.Sprintf("%s%s", "包含key:", gconv.String(v1))
+				}
 				return
 			}
 		default:
