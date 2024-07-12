@@ -2,6 +2,7 @@ package cfg
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcfg"
@@ -186,15 +187,167 @@ func Test_checkRules(t *testing.T) {
 		{Name: "ProposalZero24", Expect: "false,[提醒]testSlice1值为[]interface {}[1],期望为零值", Env: DEV, opt: checkOpt{Pattern: "testSlice1", Kind: reflect.Slice, Level: ProposalZero, Env: []ENV{DEV, PROD}, Extra: nil}},
 		{Name: "ProposalZero25", Expect: "false,[提醒]testSlice2值为[]interface {}[1 2],期望为零值", Env: DEV, opt: checkOpt{Pattern: "testSlice2", Kind: reflect.Slice, Level: ProposalZero, Env: []ENV{DEV, PROD}, Extra: nil}},
 		{Name: "ProposalZero26", Expect: "false,[提醒]testSlice2Str值为[]interface {}[1 2],期望为零值", Env: DEV, opt: checkOpt{Pattern: "testSlice2Str", Kind: reflect.Slice, Level: ProposalZero, Env: []ENV{DEV, PROD}, Extra: nil}},
+
+		//EQ
+		{Name: "EQ1", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "none", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{EQ: nil}}},
+		{Name: "EQ2", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testStrNil", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{EQ: nil}}},
+		{Name: "EQ3", Expect: "false,[错误]testStrEmpty:值string应该等于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testStrEmpty", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{EQ: nil}}},
+		{Name: "EQ4", Expect: "false,[错误]testStr0:值string0应该等于string1", Env: DEV, opt: checkOpt{Pattern: "testStr0", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{EQ: "1"}}},
+		{Name: "EQ5", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testStr1", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{EQ: "1"}}},
+		{Name: "EQ6", Expect: "false,[错误]testStr2:值string2应该等于string1", Env: DEV, opt: checkOpt{Pattern: "testStr2", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{EQ: "1"}}},
+		{Name: "EQ7", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testBoolNil", Kind: reflect.Bool, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{EQ: nil}}},
+		{Name: "EQ8", Expect: "false,[错误]testBoolfalse:值boolfalse应该等于booltrue", Env: DEV, opt: checkOpt{Pattern: "testBoolfalse", Kind: reflect.Bool, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{EQ: true}}},
+		{Name: "EQ9", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testBooltrue", Kind: reflect.Bool, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{EQ: true}}},
+		{Name: "EQ10", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testIntNil", Kind: reflect.Int64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{EQ: nil}}},
+		{Name: "EQ11", Expect: "false,[错误]testInt0:值int640应该等于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testInt0", Kind: reflect.Int64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{EQ: nil}}},
+		{Name: "EQ12", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testInt1", Kind: reflect.Int64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{EQ: 1}}},
+		{Name: "EQ13", Expect: "false,[错误]testInt2:值int642应该等于int1", Env: DEV, opt: checkOpt{Pattern: "testInt2", Kind: reflect.Int64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{EQ: 1}}},
+		{Name: "EQ14", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testFloatNil", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{EQ: nil}}},
+		{Name: "EQ15", Expect: "false,[错误]testFloat0p0:值int640应该等于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testFloat0p0", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{EQ: nil}}},
+		{Name: "EQ16", Expect: "false,[错误]testFloat0p1:值float640.1应该等于float641.1", Env: DEV, opt: checkOpt{Pattern: "testFloat0p1", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{EQ: 1.1}}},
+		{Name: "EQ17", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testFloat1p1", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{EQ: 1.1}}},
+		{Name: "EQ18", Expect: "false,[错误]testFloat2p1:值float642.1应该等于float641.1", Env: DEV, opt: checkOpt{Pattern: "testFloat2p1", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{EQ: 1.1}}},
+		//NE
+		{Name: "NE1", Expect: "false,[错误]none:值nil应该不等于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "none", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{NE: nil}}},
+		{Name: "NE2", Expect: "false,[错误]testStrNil:值nil应该不等于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testStrNil", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{NE: nil}}},
+		{Name: "NE3", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testStrEmpty", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{NE: nil}}},
+		{Name: "NE4", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testStr0", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{NE: "1"}}},
+		{Name: "NE5", Expect: "false,[错误]testStr1:值string1应该不等于string1", Env: DEV, opt: checkOpt{Pattern: "testStr1", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{NE: "1"}}},
+		{Name: "NE6", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testStr2", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{NE: "1"}}},
+		{Name: "NE7", Expect: "false,[错误]testBoolNil:值nil应该不等于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testBoolNil", Kind: reflect.Bool, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{NE: nil}}},
+		{Name: "NE8", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testBoolfalse", Kind: reflect.Bool, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{NE: true}}},
+		{Name: "NE9", Expect: "false,[错误]testBooltrue:值booltrue应该不等于booltrue", Env: DEV, opt: checkOpt{Pattern: "testBooltrue", Kind: reflect.Bool, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{NE: true}}},
+		{Name: "NE10", Expect: "false,[错误]testIntNil:值nil应该不等于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testIntNil", Kind: reflect.Int64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{NE: nil}}},
+		{Name: "NE11", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testInt0", Kind: reflect.Int64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{NE: nil}}},
+		{Name: "NE12", Expect: "false,[错误]testInt1:值int641应该不等于int1", Env: DEV, opt: checkOpt{Pattern: "testInt1", Kind: reflect.Int64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{NE: 1}}},
+		{Name: "NE13", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testInt2", Kind: reflect.Int64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{NE: 1}}},
+		{Name: "NE14", Expect: "false,[错误]testFloatNil:值nil应该不等于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testFloatNil", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{NE: nil}}},
+		{Name: "NE15", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testFloat0p0", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{NE: nil}}},
+		{Name: "NE16", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testFloat0p1", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{NE: 1.1}}},
+		{Name: "NE17", Expect: "false,[错误]testFloat1p1:值float641.1应该不等于float641.1", Env: DEV, opt: checkOpt{Pattern: "testFloat1p1", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{NE: 1.1}}},
+		{Name: "NE18", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testFloat2p1", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{NE: 1.1}}},
+		//GT
+		{Name: "GT1", Expect: "false,[错误]none:值nil应该大于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "none", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{GT: nil}}},
+		{Name: "GT2", Expect: "false,[错误]testStrNil:值nil应该大于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testStrNil", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{GT: nil}}},
+		{Name: "GT3", Expect: "false,[错误]testStrEmpty:值string应该大于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testStrEmpty", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{GT: nil}}},
+		{Name: "GT4", Expect: "false,[错误]testStr0:值string0应该大于string1", Env: DEV, opt: checkOpt{Pattern: "testStr0", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{GT: "1"}}},
+		{Name: "GT5", Expect: "false,[错误]testStr1:值string1应该大于string1", Env: DEV, opt: checkOpt{Pattern: "testStr1", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{GT: "1"}}},
+		{Name: "GT6", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testStr2", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{GT: "1"}}},
+		{Name: "GT10", Expect: "false,[错误]testIntNil:值nil应该大于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testIntNil", Kind: reflect.Int64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{GT: nil}}},
+		{Name: "GT11", Expect: "false,[错误]testInt0:值int640应该大于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testInt0", Kind: reflect.Int64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{GT: nil}}},
+		{Name: "GT12", Expect: "false,[错误]testInt1:值int641应该大于int1", Env: DEV, opt: checkOpt{Pattern: "testInt1", Kind: reflect.Int64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{GT: 1}}},
+		{Name: "GT13", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testInt2", Kind: reflect.Int64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{GT: 1}}},
+		{Name: "GT14", Expect: "false,[错误]testFloatNil:值nil应该大于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testFloatNil", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{GT: nil}}},
+		{Name: "GT15", Expect: "false,[错误]testFloat0p0:值int640应该大于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testFloat0p0", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{GT: nil}}},
+		{Name: "GT16", Expect: "false,[错误]testFloat0p1:值float640.1应该大于float641.1", Env: DEV, opt: checkOpt{Pattern: "testFloat0p1", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{GT: 1.1}}},
+		{Name: "GT17", Expect: "false,[错误]testFloat1p1:值float641.1应该大于float641.1", Env: DEV, opt: checkOpt{Pattern: "testFloat1p1", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{GT: 1.1}}},
+		{Name: "GT18", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testFloat2p1", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{GT: 1.1}}},
+		//GE
+		{Name: "GE1", Expect: "false,[错误]none:值nil应该大于等于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "none", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{GE: nil}}},
+		{Name: "GE2", Expect: "false,[错误]testStrNil:值nil应该大于等于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testStrNil", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{GE: nil}}},
+		{Name: "GE3", Expect: "false,[错误]testStrEmpty:值string应该大于等于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testStrEmpty", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{GE: nil}}},
+		{Name: "GE4", Expect: "false,[错误]testStr0:值string0应该大于等于string1", Env: DEV, opt: checkOpt{Pattern: "testStr0", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{GE: "1"}}},
+		{Name: "GE5", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testStr1", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{GE: "1"}}},
+		{Name: "GE6", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testStr2", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{GE: "1"}}},
+		{Name: "GE10", Expect: "false,[错误]testIntNil:值nil应该大于等于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testIntNil", Kind: reflect.Int64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{GE: nil}}},
+		{Name: "GE11", Expect: "false,[错误]testInt0:值int640应该大于等于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testInt0", Kind: reflect.Int64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{GE: nil}}},
+		{Name: "GE12", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testInt1", Kind: reflect.Int64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{GE: 1}}},
+		{Name: "GE13", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testInt2", Kind: reflect.Int64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{GE: 1}}},
+		{Name: "GE14", Expect: "false,[错误]testFloatNil:值nil应该大于等于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testFloatNil", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{GE: nil}}},
+		{Name: "GE15", Expect: "false,[错误]testFloat0p0:值int640应该大于等于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testFloat0p0", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{GE: nil}}},
+		{Name: "GE16", Expect: "false,[错误]testFloat0p1:值float640.1应该大于等于float641.1", Env: DEV, opt: checkOpt{Pattern: "testFloat0p1", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{GE: 1.1}}},
+		{Name: "GE17", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testFloat1p1", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{GE: 1.1}}},
+		{Name: "GE18", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testFloat2p1", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{GE: 1.1}}},
+		//LT
+		{Name: "LT1", Expect: "false,[错误]none:值nil应该小于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "none", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{LT: nil}}},
+		{Name: "LT2", Expect: "false,[错误]testStrNil:值nil应该小于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testStrNil", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{LT: nil}}},
+		{Name: "LT3", Expect: "false,[错误]testStrEmpty:值string应该小于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testStrEmpty", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{LT: nil}}},
+		{Name: "LT4", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testStr0", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{LT: "1"}}},
+		{Name: "LT5", Expect: "false,[错误]testStr1:值string1应该小于string1", Env: DEV, opt: checkOpt{Pattern: "testStr1", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{LT: "1"}}},
+		{Name: "LT6", Expect: "false,[错误]testStr2:值string2应该小于string1", Env: DEV, opt: checkOpt{Pattern: "testStr2", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{LT: "1"}}},
+		{Name: "LT10", Expect: "false,[错误]testIntNil:值nil应该小于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testIntNil", Kind: reflect.Int64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{LT: nil}}},
+		{Name: "LT11", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testInt0", Kind: reflect.Int64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{LT: 1}}},
+		{Name: "LT12", Expect: "false,[错误]testInt1:值int641应该小于int1", Env: DEV, opt: checkOpt{Pattern: "testInt1", Kind: reflect.Int64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{LT: 1}}},
+		{Name: "LT13", Expect: "false,[错误]testInt2:值int642应该小于int1", Env: DEV, opt: checkOpt{Pattern: "testInt2", Kind: reflect.Int64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{LT: 1}}},
+		{Name: "LT14", Expect: "false,[错误]testFloatNil:值nil应该小于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testFloatNil", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{LT: nil}}},
+		{Name: "LT15", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testFloat0p0", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{LT: 1.1}}},
+		{Name: "LT16", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testFloat0p1", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{LT: 1.1}}},
+		{Name: "LT17", Expect: "false,[错误]testFloat1p1:值float641.1应该小于float641.1", Env: DEV, opt: checkOpt{Pattern: "testFloat1p1", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{LT: 1.1}}},
+		{Name: "LT18", Expect: "false,[错误]testFloat2p1:值float642.1应该小于float641.1", Env: DEV, opt: checkOpt{Pattern: "testFloat2p1", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{LT: 1.1}}},
+		//LE
+		{Name: "LE1", Expect: "false,[错误]none:值nil应该小于等于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "none", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{LE: nil}}},
+		{Name: "LE2", Expect: "false,[错误]testStrNil:值nil应该小于等于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testStrNil", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{LE: nil}}},
+		{Name: "LE3", Expect: "false,[错误]testStrEmpty:值string应该小于等于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testStrEmpty", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{LE: nil}}},
+		{Name: "LE4", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testStr0", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{LE: "1"}}},
+		{Name: "LE5", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testStr1", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{LE: "1"}}},
+		{Name: "LE6", Expect: "false,[错误]testStr2:值string2应该小于等于string1", Env: DEV, opt: checkOpt{Pattern: "testStr2", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{LE: "1"}}},
+		{Name: "LE10", Expect: "false,[错误]testIntNil:值nil应该小于等于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testIntNil", Kind: reflect.Int64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{LE: nil}}},
+		{Name: "LE11", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testInt0", Kind: reflect.Int64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{LE: 1}}},
+		{Name: "LE12", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testInt1", Kind: reflect.Int64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{LE: 1}}},
+		{Name: "LE13", Expect: "false,[错误]testInt2:值int642应该小于等于int1", Env: DEV, opt: checkOpt{Pattern: "testInt2", Kind: reflect.Int64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{LE: 1}}},
+		{Name: "LE14", Expect: "false,[错误]testFloatNil:值nil应该小于等于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testFloatNil", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{LE: nil}}},
+		{Name: "LE15", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testFloat0p0", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{LE: 1.1}}},
+		{Name: "LE16", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testFloat0p1", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{LE: 1.1}}},
+		{Name: "LE17", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testFloat1p1", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{LE: 1.1}}},
+		{Name: "LE18", Expect: "false,[错误]testFloat2p1:值float642.1应该小于等于float641.1", Env: DEV, opt: checkOpt{Pattern: "testFloat2p1", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{LE: 1.1}}},
+		//IN
+		{Name: "IN1", Expect: "false,[错误]none:值nil应该被包含于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "none", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{IN: nil}}},
+		{Name: "IN2", Expect: "false,[错误]testStrNil:值nil应该被包含于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testStrNil", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{IN: nil}}},
+		{Name: "IN3", Expect: "false,[错误]testStrEmpty:值string应该被包含于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testStrEmpty", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{IN: nil}}},
+		{Name: "IN4", Expect: "false,[错误]testStr0:值string0应该被包含于[]interface {}[1]", Env: DEV, opt: checkOpt{Pattern: "testStr0", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{IN: []interface{}{"1"}}}},
+		{Name: "IN5", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testStr1", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{IN: []interface{}{"1"}}}},
+		{Name: "IN6", Expect: "false,[错误]testStr2:值string2应该被包含于[]interface {}[1]", Env: DEV, opt: checkOpt{Pattern: "testStr2", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{IN: []interface{}{"1"}}}},
+		{Name: "IN10", Expect: "false,[错误]testIntNil:值nil应该被包含于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testIntNil", Kind: reflect.Int64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{IN: nil}}},
+		{Name: "IN11", Expect: "false,[错误]testInt0:值int640应该被包含于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testInt0", Kind: reflect.Int64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{IN: nil}}},
+		{Name: "IN12", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testInt1", Kind: reflect.Int64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{IN: []interface{}{json.Number("1")}}}},
+		{Name: "IN13", Expect: "false,[错误]testInt2:值int642应该被包含于[]interface {}[1]", Env: DEV, opt: checkOpt{Pattern: "testInt2", Kind: reflect.Int64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{IN: []interface{}{json.Number("1")}}}},
+		{Name: "IN14", Expect: "false,[错误]testFloatNil:值nil应该被包含于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testFloatNil", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{IN: nil}}},
+		{Name: "IN15", Expect: "false,[错误]testFloat0p0:值int640应该被包含于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testFloat0p0", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{IN: nil}}},
+		{Name: "IN16", Expect: "false,[错误]testFloat0p1:值float640.1应该被包含于[]interface {}[1.1]", Env: DEV, opt: checkOpt{Pattern: "testFloat0p1", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{IN: []interface{}{json.Number("1.1")}}}},
+		{Name: "IN17", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testFloat1p1", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{IN: []interface{}{json.Number("1.1")}}}},
+		{Name: "IN18", Expect: "false,[错误]testFloat2p1:值float642.1应该被包含于[]interface {}[1.1]", Env: DEV, opt: checkOpt{Pattern: "testFloat2p1", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{IN: []interface{}{json.Number("1.1")}}}},
+		//NI
+		{Name: "NI1", Expect: "false,[错误]none:值nil应该不被包含于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "none", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{NI: nil}}},
+		{Name: "NI2", Expect: "false,[错误]testStrNil:值nil应该不被包含于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testStrNil", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{NI: nil}}},
+		{Name: "NI3", Expect: "false,[错误]testStrEmpty:值string应该不被包含于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testStrEmpty", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{NI: nil}}},
+		{Name: "NI4", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testStr0", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{NI: []interface{}{"1"}}}},
+		{Name: "NI5", Expect: "false,[错误]testStr1:值string1应该不被包含于[]interface {}[1]", Env: DEV, opt: checkOpt{Pattern: "testStr1", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{NI: []interface{}{"1"}}}},
+		{Name: "NI6", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testStr2", Kind: reflect.String, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{NI: []interface{}{"1"}}}},
+		{Name: "NI10", Expect: "false,[错误]testIntNil:值nil应该不被包含于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testIntNil", Kind: reflect.Int64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{NI: nil}}},
+		{Name: "NI11", Expect: "false,[错误]testInt0:值int640应该不被包含于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testInt0", Kind: reflect.Int64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{NI: nil}}},
+		{Name: "NI12", Expect: "false,[错误]testInt1:值int641应该不被包含于[]interface {}[1]", Env: DEV, opt: checkOpt{Pattern: "testInt1", Kind: reflect.Int64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{NI: []interface{}{json.Number("1")}}}},
+		{Name: "NI13", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testInt2", Kind: reflect.Int64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{NI: []interface{}{json.Number("1")}}}},
+		{Name: "NI14", Expect: "false,[错误]testFloatNil:值nil应该不被包含于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testFloatNil", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{NI: nil}}},
+		{Name: "NI15", Expect: "false,[错误]testFloat0p0:值int640应该不被包含于<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testFloat0p0", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{NI: nil}}},
+		{Name: "NI16", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testFloat0p1", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{NI: []interface{}{json.Number("1.1")}}}},
+		{Name: "NI17", Expect: "false,[错误]testFloat1p1:值float641.1应该不被包含于[]interface {}[1.1]", Env: DEV, opt: checkOpt{Pattern: "testFloat1p1", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{NI: []interface{}{json.Number("1.1")}}}},
+		{Name: "NI18", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testFloat2p1", Kind: reflect.Float64, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{NI: []interface{}{json.Number("1.1")}}}},
+		//CO
+		{Name: "CO19", Expect: "false,[错误]testMapNil:值nil应该包含key:", Env: DEV, opt: checkOpt{Pattern: "testMapNil", Kind: reflect.Map, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{CO: nil}}},
+		{Name: "CO20", Expect: "false,[错误]testMap1:值map[string]interface {}map[1:1]应该包含key:2", Env: DEV, opt: checkOpt{Pattern: "testMap1", Kind: reflect.Map, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{CO: "2"}}},
+		{Name: "CO21", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testMap2", Kind: reflect.Map, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{CO: "2"}}},
+		{Name: "CO22", Expect: "false,[错误]testSliceNil:值nil应该包含<nil><nil>", Env: DEV, opt: checkOpt{Pattern: "testSliceNil", Kind: reflect.Slice, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{CO: nil}}},
+		{Name: "CO23", Expect: "false,[错误]testSliceEmpty:值[]interface {}[]应该包含[]interface {}[]", Env: DEV, opt: checkOpt{Pattern: "testSliceEmpty", Kind: reflect.Slice, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{CO: []interface{}{}}}},
+		{Name: "CO24", Expect: "false,[错误]testSlice1:值[]interface {}[1]应该包含json.Number2", Env: DEV, opt: checkOpt{Pattern: "testSlice1", Kind: reflect.Slice, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{CO: json.Number("2")}}},
+		{Name: "CO25", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testSlice2", Kind: reflect.Slice, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{CO: json.Number("2")}}},
+		{Name: "CO26", Expect: "true,", Env: DEV, opt: checkOpt{Pattern: "testSlice2Str", Kind: reflect.Slice, Level: OptionalInput, Env: []ENV{DEV, PROD}, Extra: map[ExtraKey]interface{}{CO: "2"}}},
 	}
 	for _, v := range rules {
 		gtest.C(t, func(t *gtest.T) {
-			defer func(rule Case) {
-				if e := recover(); e != nil {
-					t.Errorf("ERROR %s:%v", v.Name, e)
-				}
-			}(v)
-			b, s := checkRule(gcfg.Instance().MustGet(ctx, v.opt.Pattern).Interface(), v.Env, v.opt)
+			b, s, err := func() (b bool, s string, err error) {
+				defer func() {
+					if e := recover(); e != nil {
+						t.Errorf("ERROR %s:%v", v.Name, e)
+						err = e.(error)
+					}
+				}()
+
+				b, s = checkRule(gcfg.Instance().MustGet(ctx, v.opt.Pattern).Interface(), v.Env, v.opt)
+				return
+			}()
+			if err != nil {
+				return
+			}
 			testWithExcel.Assert(v.Name, fmt.Sprintf("%t,%s", b, s), v.Expect)
 		})
 	}

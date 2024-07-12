@@ -203,29 +203,33 @@ func checkExtra(v interface{}, kind reflect.Kind, extra map[ExtraKey]interface{}
 	}
 
 	ok = true
-	if v == nil || len(extra) == 0 {
+	if len(extra) == 0 {
 		return
 	}
+
 	//先检查类型
-	kt := reflect.TypeOf(v).String()
-	if kt == "json.Number" {
-		if strings.Contains(v.(json.Number).String(), ".") {
-			v, _ = v.(json.Number).Float64()
-		} else {
-			v, _ = v.(json.Number).Int64()
-		}
-	}
 	for k1, v1 := range extra {
 		v1Str := fmt.Sprintf("%T%v", v1, v1)
 		switch k1 {
 		case EQ:
 			switch {
+			case kind == reflect.Map:
+				panic(fmt.Errorf("map类型不支持ExtraKey:%v", k1))
+			case kind == reflect.Slice:
+				panic(fmt.Errorf("slice类型不支持ExtraKey:%v", k1))
+			}
+
+			if (v == nil && v1 != nil) || (v != nil && v1 == nil) {
+				ok = false
+				expect = fmt.Sprintf("%s%s", "等于", v1Str)
+				return
+			}
+
+			switch {
 			case kind == reflect.String && gconv.String(v) == gconv.String(v1):
 			case kind == reflect.Bool && gconv.Bool(v) == gconv.Bool(v1):
 			case kind == reflect.Int64 && gconv.Int64(v) == gconv.Int64(v1):
 			case kind == reflect.Float64 && gconv.Float64(v) == gconv.Float64(v1):
-			case kind == reflect.Map && reflect.DeepEqual(v, v1):
-			case kind == reflect.Slice && reflect.DeepEqual(v, v1):
 			default:
 				ok = false
 				expect = fmt.Sprintf("%s%s", "等于", v1Str)
@@ -233,12 +237,25 @@ func checkExtra(v interface{}, kind reflect.Kind, extra map[ExtraKey]interface{}
 			}
 		case NE:
 			switch {
+			case kind == reflect.Map:
+				panic(fmt.Errorf("map类型不支持ExtraKey:%v", k1))
+			case kind == reflect.Slice:
+				panic(fmt.Errorf("slice类型不支持ExtraKey:%v", k1))
+			}
+
+			if v == nil && v1 == nil {
+				ok = false
+				expect = fmt.Sprintf("%s%s", "不等于", v1Str)
+				return
+			} else if v != nil && v1 == nil {
+				return
+			}
+
+			switch {
 			case kind == reflect.String && gconv.String(v) != gconv.String(v1):
 			case kind == reflect.Bool && gconv.Bool(v) != gconv.Bool(v1):
 			case kind == reflect.Int64 && gconv.Int64(v) != gconv.Int64(v1):
 			case kind == reflect.Float64 && gconv.Float64(v) != gconv.Float64(v1):
-			case kind == reflect.Map && !reflect.DeepEqual(v, v1):
-			case kind == reflect.Slice && !reflect.DeepEqual(v, v1):
 			default:
 				ok = false
 				expect = fmt.Sprintf("%s%s", "不等于", v1Str)
@@ -246,83 +263,121 @@ func checkExtra(v interface{}, kind reflect.Kind, extra map[ExtraKey]interface{}
 			}
 		case GT:
 			switch {
-			case kind == reflect.String && gconv.String(v) > gconv.String(v1):
 			case kind == reflect.Bool:
-				panic(fmt.Errorf("不支持的额外规则%v:%s", k1, v1Str))
+				panic(fmt.Errorf("bool类型不支持ExtraKey:%v", k1))
+			case kind == reflect.Map:
+				panic(fmt.Errorf("map类型不支持ExtraKey:%v", k1))
+			case kind == reflect.Slice:
+				panic(fmt.Errorf("slice类型不支持ExtraKey:%v", k1))
+			}
+
+			if v == nil || v1 == nil {
+				ok = false
+				expect = fmt.Sprintf("%s%s", "大于", v1Str)
+				return
+			}
+
+			switch {
+			case kind == reflect.String && gconv.String(v) > gconv.String(v1):
 			case kind == reflect.Int64 && gconv.Int64(v) > gconv.Int64(v1):
 			case kind == reflect.Float64 && gconv.Float64(v) > gconv.Float64(v1):
-			case kind == reflect.Map && len(gconv.Map(v)) > gconv.Int(v1):
-			case kind == reflect.Slice && len(gconv.SliceAny(v)) > gconv.Int(v1):
 			default:
 				ok = false
 				expect = fmt.Sprintf("%s%s", "大于", v1Str)
-				if contains([]reflect.Kind{reflect.Map, reflect.Slice}, kind) {
-					expect = fmt.Sprintf("%s%d", "长度大于", gconv.Int(v1))
-				}
 				return
 			}
 		case GE:
 			switch {
-			case kind == reflect.String && gconv.String(v) >= gconv.String(v1):
 			case kind == reflect.Bool:
-				panic(fmt.Errorf("不支持的额外规则%v:%s", k1, v1Str))
+				panic(fmt.Errorf("bool类型不支持ExtraKey:%v", k1))
+			case kind == reflect.Map:
+				panic(fmt.Errorf("map类型不支持ExtraKey:%v", k1))
+			case kind == reflect.Slice:
+				panic(fmt.Errorf("slice类型不支持ExtraKey:%v", k1))
+			}
+
+			if v == nil || v1 == nil {
+				ok = false
+				expect = fmt.Sprintf("%s%s", "大于等于", v1Str)
+				return
+			}
+
+			switch {
+			case kind == reflect.String && gconv.String(v) >= gconv.String(v1):
 			case kind == reflect.Int64 && gconv.Int64(v) >= gconv.Int64(v1):
 			case kind == reflect.Float64 && gconv.Float64(v) >= gconv.Float64(v1):
-			case kind == reflect.Map && len(gconv.Map(v)) >= gconv.Int(v1):
-			case kind == reflect.Slice && len(gconv.SliceAny(v)) >= gconv.Int(v1):
 			default:
 				ok = false
 				expect = fmt.Sprintf("%s%s", "大于等于", v1Str)
-				if contains([]reflect.Kind{reflect.Map, reflect.Slice}, kind) {
-					expect = fmt.Sprintf("%s%d", "长度大于等于", gconv.Int(v1))
-				}
 				return
 			}
 		case LT:
 			switch {
-			case kind == reflect.String && gconv.String(v) < gconv.String(v1):
 			case kind == reflect.Bool:
-				panic(fmt.Errorf("不支持的额外规则%v:%s", k1, v1Str))
+				panic(fmt.Errorf("bool类型不支持ExtraKey:%v", k1))
+			case kind == reflect.Map:
+				panic(fmt.Errorf("map类型不支持ExtraKey:%v", k1))
+			case kind == reflect.Slice:
+				panic(fmt.Errorf("slice类型不支持ExtraKey:%v", k1))
+			}
+
+			if v == nil || v1 == nil {
+				ok = false
+				expect = fmt.Sprintf("%s%s", "小于", v1Str)
+				return
+			}
+			switch {
+			case kind == reflect.String && gconv.String(v) < gconv.String(v1):
 			case kind == reflect.Int64 && gconv.Int64(v) < gconv.Int64(v1):
 			case kind == reflect.Float64 && gconv.Float64(v) < gconv.Float64(v1):
-			case kind == reflect.Map && len(gconv.Map(v)) < gconv.Int(v1):
-			case kind == reflect.Slice && len(gconv.SliceAny(v)) < gconv.Int(v1):
 			default:
 				ok = false
 				expect = fmt.Sprintf("%s%s", "小于", v1Str)
-				if contains([]reflect.Kind{reflect.Map, reflect.Slice}, kind) {
-					expect = fmt.Sprintf("%s%d", "长度小于", gconv.Int(v1))
-				}
 				return
 			}
 		case LE:
 			switch {
-			case kind == reflect.String && gconv.String(v) <= gconv.String(v1):
 			case kind == reflect.Bool:
-				panic(fmt.Errorf("不支持的额外规则%v:%s", k1, v1Str))
+				panic(fmt.Errorf("bool类型不支持ExtraKey:%v", k1))
+			case kind == reflect.Map:
+				panic(fmt.Errorf("map类型不支持ExtraKey:%v", k1))
+			case kind == reflect.Slice:
+				panic(fmt.Errorf("slice类型不支持ExtraKey:%v", k1))
+			}
+
+			if v == nil || v1 == nil {
+				ok = false
+				expect = fmt.Sprintf("%s%s", "小于等于", v1Str)
+				return
+			}
+			switch {
+			case kind == reflect.String && gconv.String(v) <= gconv.String(v1):
 			case kind == reflect.Int64 && gconv.Int64(v) <= gconv.Int64(v1):
 			case kind == reflect.Float64 && gconv.Float64(v) <= gconv.Float64(v1):
-			case kind == reflect.Map && len(gconv.Map(v)) <= gconv.Int(v1):
-			case kind == reflect.Slice && len(gconv.SliceAny(v)) <= gconv.Int(v1):
 			default:
 				ok = false
 				expect = fmt.Sprintf("%s%s", "小于等于", v1Str)
-				if contains([]reflect.Kind{reflect.Map, reflect.Slice}, kind) {
-					expect = fmt.Sprintf("%s%d", "长度小于等于", gconv.Int(v1))
-				}
 				return
 			}
 		case IN:
 			switch {
-			case kind == reflect.String && contains(gconv.Strings(v1), gconv.String(v)):
 			case kind == reflect.Bool:
-				panic(fmt.Errorf("不支持的额外规则%v:%s", k1, v1Str))
+				panic(fmt.Errorf("bool类型不支持ExtraKey:%v", k1))
+			case kind == reflect.Map:
+				panic(fmt.Errorf("map类型不支持ExtraKey:%v", k1))
+			case kind == reflect.Slice:
+				panic(fmt.Errorf("slice类型不支持ExtraKey:%v", k1))
+			}
+
+			if v == nil || v1 == nil {
+				ok = false
+				expect = fmt.Sprintf("%s%s", "被包含于", v1Str)
+				return
+			}
+			switch {
+			case kind == reflect.String && contains(gconv.Strings(v1), gconv.String(v)):
 			case kind == reflect.Int64 && contains(gconv.Int64s(v1), gconv.Int64(v)):
 			case kind == reflect.Float64 && contains(gconv.Float64s(v1), gconv.Float64(v)):
-			case kind == reflect.Map:
-				panic(fmt.Errorf("不支持的额外规则%v:%s", k1, v1Str))
-			case kind == reflect.Slice:
-				panic(fmt.Errorf("不支持的额外规则%v:%s", k1, v1Str))
 			default:
 				ok = false
 				expect = fmt.Sprintf("%s%s", "被包含于", v1Str)
@@ -330,15 +385,23 @@ func checkExtra(v interface{}, kind reflect.Kind, extra map[ExtraKey]interface{}
 			}
 		case NI:
 			switch {
-			case kind == reflect.String && !contains(gconv.Strings(v1), gconv.String(v)):
 			case kind == reflect.Bool:
-				panic(fmt.Errorf("不支持的额外规则%v:%s", k1, v1Str))
+				panic(fmt.Errorf("bool类型不支持ExtraKey:%v", k1))
+			case kind == reflect.Map:
+				panic(fmt.Errorf("map类型不支持ExtraKey:%v", k1))
+			case kind == reflect.Slice:
+				panic(fmt.Errorf("slice类型不支持ExtraKey:%v", k1))
+			}
+
+			if v == nil || v1 == nil {
+				ok = false
+				expect = fmt.Sprintf("%s%s", "不被包含于", v1Str)
+				return
+			}
+			switch {
+			case kind == reflect.String && !contains(gconv.Strings(v1), gconv.String(v)):
 			case kind == reflect.Int64 && !contains(gconv.Int64s(v1), gconv.Int64(v)):
 			case kind == reflect.Float64 && !contains(gconv.Float64s(v1), gconv.Float64(v)):
-			case kind == reflect.Map:
-				panic(fmt.Errorf("不支持的额外规则%v:%s", k1, v1Str))
-			case kind == reflect.Slice:
-				panic(fmt.Errorf("不支持的额外规则%v:%s", k1, v1Str))
 			default:
 				ok = false
 				expect = fmt.Sprintf("%s%s", "不被包含于", v1Str)
@@ -347,15 +410,26 @@ func checkExtra(v interface{}, kind reflect.Kind, extra map[ExtraKey]interface{}
 		case CO:
 			switch {
 			case kind == reflect.String:
-				panic(fmt.Errorf("不支持的额外规则%v:%s", k1, v1Str))
+				panic(fmt.Errorf("string类型不支持ExtraKey:%v", k1))
 			case kind == reflect.Bool:
-				panic(fmt.Errorf("不支持的额外规则%v:%s", k1, v1Str))
+				panic(fmt.Errorf("bool类型不支持ExtraKey:%v", k1))
 			case kind == reflect.Int64:
-				panic(fmt.Errorf("不支持的额外规则%v:%s", k1, v1Str))
+				panic(fmt.Errorf("int64类型不支持ExtraKey:%v", k1))
 			case kind == reflect.Float64:
-				panic(fmt.Errorf("不支持的额外规则%v:%s", k1, v1Str))
-			case kind == reflect.Map && kt == "map[string]interface {}" && containsKey(v.(map[string]interface{}), gconv.String(v1)):
-			case kind == reflect.Slice && kt == "[]interface {}" && contains(v.([]interface{}), v1):
+				panic(fmt.Errorf("float64类型不支持ExtraKey:%v", k1))
+			}
+
+			if v == nil {
+				ok = false
+				expect = fmt.Sprintf("%s%s", "包含", v1Str)
+				if reflect.Map == kind {
+					expect = fmt.Sprintf("%s%s", "包含key:", gconv.String(v1))
+				}
+				return
+			}
+			switch {
+			case kind == reflect.Map && containsKey(v.(map[string]interface{}), gconv.String(v1)):
+			case kind == reflect.Slice && contains(v.([]interface{}), v1):
 			default:
 				ok = false
 				expect = fmt.Sprintf("%s%s", "包含", v1Str)
@@ -365,7 +439,7 @@ func checkExtra(v interface{}, kind reflect.Kind, extra map[ExtraKey]interface{}
 				return
 			}
 		default:
-			panic(fmt.Errorf("规则配置异常，不支持的额外规则%v:%s", k1, v1Str))
+			panic(fmt.Errorf("不支持的ExtraKey:%v", k1))
 		}
 	}
 	return
