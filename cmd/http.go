@@ -43,10 +43,10 @@ func GetHttpCmdFunc(middleware MiddlewareForCmd, useMiddlewares []ghttp.HandlerF
 
 		s := g.Server()
 		middlewares := append([]ghttp.HandlerFunc{
-			logging.MiddlewareLogFormatJson,
-			logging.MiddlewareHandlerAccessLog,
-			logging.MiddlewareHandlerErrorLog,
-			response.MiddlewareHandlerResponse,
+			logging.HttpLogFormatJsonMiddleware,
+			logging.HttpAccessLogMiddleware,
+			logging.HttpErrorLogMiddleware,
+			response.HttpResponseMiddleware,
 		}, useMiddlewares...)
 		s.Use(middlewares...)
 		for _, v := range serverGroups {

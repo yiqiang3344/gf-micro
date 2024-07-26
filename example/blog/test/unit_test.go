@@ -34,7 +34,7 @@ func init() {
 
 	// 客户端初始化
 	blogClient = v1.NewBlogClient(grpcx.Client.MustNewGrpcClientConn("blog", grpcx.Client.ChainUnary(
-		logging2.UnaryCLogger,
+		logging2.GrpcClientLoggerUnary,
 	)))
 }
 

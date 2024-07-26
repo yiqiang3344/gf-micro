@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/util/gconv"
+	"github.com/yiqiang3344/gf-micro/flowColor"
 	"github.com/yiqiang3344/gf-micro/testWithExcel"
 	"strings"
 	"testing"
@@ -57,6 +58,7 @@ func TestUnit(t *testing.T) {
 }
 
 func do(t *testing.T, info testInfo) {
+	ctx := flowColor.SetCtxFlowColor(context.Background(), "dev")
 	o, err := testWithExcel.New(t, info.filePath,
 		testWithExcel.WithCaseHandleFunc(func(ctx context.Context, t *testing.T, caseInfo testWithExcel.CaseInfo) (ret interface{}, err error) {
 			if caseInfo.Extend["delayTime"] != "" {
@@ -80,5 +82,5 @@ func do(t *testing.T, info testInfo) {
 	if err != nil {
 		panic(fmt.Errorf("接口%s运行异常:%v", info.route, err))
 	}
-	o.Run(context.Background())
+	o.Run(ctx)
 }

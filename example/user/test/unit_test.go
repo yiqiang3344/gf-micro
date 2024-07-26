@@ -39,7 +39,7 @@ func init() {
 
 	// 客户端初始化
 	userClient = v1.NewUserClient(grpcx.Client.MustNewGrpcClientConn("user", grpcx.Client.ChainUnary(
-		logging2.UnaryCLogger,
+		logging2.GrpcClientLoggerUnary,
 	)))
 }
 
@@ -152,7 +152,7 @@ func GetClient(ctx context.Context) *gclient.Client {
 
 	prefix := fmt.Sprintf("http://127.0.0.1:%d", Port)
 	client := g.Client()
-	client.Use(logging2.MiddlewareClientLog)
+	client.Use(logging2.HttpClientLogMiddleware)
 	client.SetPrefix(prefix)
 	return client
 }

@@ -4,6 +4,7 @@ import (
 	_ "github.com/gogf/gf/contrib/drivers/mysql/v2"
 	_ "github.com/gogf/gf/contrib/nosql/redis/v2"
 	"github.com/yiqiang3344/gf-micro/cfg"
+	"github.com/yiqiang3344/gf-micro/flowColor"
 	"github.com/yiqiang3344/gf-micro/testWithExcel"
 	_ "web/internal/logic"
 	_ "web/internal/packed"
@@ -46,6 +47,7 @@ var (
 					{
 						Prefix: "/",
 						Middlewares: []ghttp.HandlerFunc{
+							flowColor.HttpServerMiddleware,
 							auth.GetHttpMiddleware(
 								authWhitePaths,
 								authLoginPaths,

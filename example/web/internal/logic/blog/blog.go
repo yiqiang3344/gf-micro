@@ -29,7 +29,7 @@ var blogClient blogMicroV1.BlogClient
 func getBlogClient() blogMicroV1.BlogClient {
 	if blogClient == nil {
 		blogClient = blogMicroV1.NewBlogClient(grpcx.Client.MustNewGrpcClientConn("blog", grpcx.Client.ChainUnary(
-			logging2.UnaryCLogger,
+			logging2.GrpcClientLoggerUnary,
 		)))
 	}
 	return blogClient

@@ -23,7 +23,7 @@ var whiteList = []string{
 	"/health",
 }
 
-func MiddlewareHandlerResponse(r *ghttp.Request) {
+func HttpResponseMiddleware(r *ghttp.Request) {
 	//r.SetCtx(gi18n.WithLanguage(r.Context(), "zh-CN")) //相应设置为中文
 
 	r.Middleware.Next()

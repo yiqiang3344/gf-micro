@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
+	"google.golang.org/grpc/metadata"
 )
 
 type GrpcClientLog struct {
@@ -12,6 +13,7 @@ type GrpcClientLog struct {
 	Req   interface{} `json:"req"`
 	Res   interface{} `json:"res"`
 	Error errorI      `json:"error"`
+	Meta  interface{} `json:"meta"`
 }
 
 func (l GrpcClientLog) Log(ctx context.Context, err ...error) {
@@ -27,5 +29,6 @@ func (l GrpcClientLog) Log(ctx context.Context, err ...error) {
 		}
 		l.Error = e
 	}
+	l.Meta, _ = metadata.FromOutgoingContext(ctx)
 	g.Log("webclient").Info(ctx, l)
 }

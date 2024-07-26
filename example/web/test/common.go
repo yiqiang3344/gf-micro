@@ -12,6 +12,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	gcfg_apollo "github.com/yiqiang3344/gcfg-apollo"
+	"github.com/yiqiang3344/gf-micro/flowColor"
 	"github.com/yiqiang3344/gf-micro/logging"
 	"golang.org/x/net/context"
 	v1 "web/api/user/v1"
@@ -41,7 +42,7 @@ func GetClient(ctx context.Context, token ...string) *gclient.Client {
 
 	prefix := fmt.Sprintf("http://127.0.0.1:%d", Port)
 	client := g.Client()
-	client.Use(logging.MiddlewareClientLog)
+	client.Use(flowColor.HttpClientMiddleware, logging.HttpClientLogMiddleware)
 	client.SetPrefix(prefix)
 
 	if len(token) > 0 {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
 	"github.com/gogf/gf/v2/os/gcmd"
+	"github.com/yiqiang3344/gf-micro/flowColor"
 	"github.com/yiqiang3344/gf-micro/logging"
 	"google.golang.org/grpc"
 )
@@ -30,7 +31,8 @@ func GetGrpcCmdFunc(middleware MiddlewareForCmd, grpcRegFunc GrpcRegFunc) func(c
 		c := grpcx.Server.NewConfig()
 		c.Options = append(c.Options, []grpc.ServerOption{
 			grpcx.Server.ChainUnary(
-				logging.UnarySLogger,
+				flowColor.GrpcServerUnary,
+				logging.GrpcServerLoggerUnary,
 				grpcx.Server.UnaryValidate,
 			)}...,
 		)

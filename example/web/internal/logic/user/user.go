@@ -8,6 +8,7 @@ import (
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/yiqiang3344/gf-micro/auth"
 	userMicroV1 "github.com/yiqiang3344/gf-micro/example/user/api/user/v1"
+	"github.com/yiqiang3344/gf-micro/flowColor"
 	logging2 "github.com/yiqiang3344/gf-micro/logging"
 	v1 "web/api/user/v1"
 	"web/internal/logging"
@@ -30,7 +31,8 @@ func getUserClient() userMicroV1.UserClient {
 	if userClient == nil {
 		userClient = userMicroV1.NewUserClient(
 			grpcx.Client.MustNewGrpcClientConn("user", grpcx.Client.ChainUnary(
-				logging2.UnaryCLogger,
+				logging2.GrpcClientLoggerUnary,
+				flowColor.GrpcClientUnary,
 			)))
 	}
 	return userClient
