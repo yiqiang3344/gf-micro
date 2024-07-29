@@ -24,6 +24,6 @@ func HttpServerMiddleware(r *ghttp.Request) {
 // HttpClientMiddleware http客户端流量染色中间件
 func HttpClientMiddleware(c *gclient.Client, r *http.Request) (response *gclient.Response, err error) {
 	ctx := SetCtxFlowColor(r.Context(), ColorBase)
-	r.Header.Set("Color", GetCtxFlowColor(ctx))
+	r.Header.Set("Color", *GetCtxFlowColor(ctx))
 	return c.Next(r)
 }

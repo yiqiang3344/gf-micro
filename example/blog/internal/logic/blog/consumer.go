@@ -12,6 +12,7 @@ import (
 	"github.com/yiqiang3344/gf-micro/cache"
 	"github.com/yiqiang3344/gf-micro/example/blog/internal/dao"
 	"github.com/yiqiang3344/gf-micro/example/blog/internal/model/do"
+	"github.com/yiqiang3344/gf-micro/flowColor"
 	rocketmq_client "github.com/yiqiang3344/rocketmq-client-go"
 	"time"
 )
@@ -33,6 +34,8 @@ func (s *sBlog) BatDeleteConsumer(ctx context.Context, parser *gcmd.Parser) (sto
 			DebugHandlerFunc: func(msg string) {
 				g.Log().Debug(ctx, msg)
 			},
+			FlowColor:     flowColor.GetLocalFlowColor(),
+			FlowColorBase: flowColor.IsBase(),
 		},
 		func(ctx context.Context, msg *rmq_client.MessageView, consumer rocketmq_client.Consumer) error {
 			id := string(msg.GetBody())
@@ -76,8 +79,8 @@ func (s *sBlog) BatDeleteConsumer(ctx context.Context, parser *gcmd.Parser) (sto
 		},
 		rocketmq_client.WithConsumerOptionAwaitDuration(5*time.Second),
 		rocketmq_client.WithConsumerOptionInvisibleDuration(10*time.Second),
-		rocketmq_client.WithConsumerOptionSubExpressions(map[string]*rmq_client.FilterExpression{
-			BatDeleteTopic: rmq_client.SUB_ALL,
+		rocketmq_client.WithConsumerOptionSubExpressions(map[string]*rocketmq_client.FilterExpression{
+			BatDeleteTopic: rocketmq_client.SUB_ALL,
 		}),
 	)
 	if err != nil {
