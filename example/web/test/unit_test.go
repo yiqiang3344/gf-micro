@@ -58,7 +58,7 @@ func TestUnit(t *testing.T) {
 }
 
 func do(t *testing.T, info testInfo) {
-	ctx := flowColor.SetCtxFlowColor(context.Background(), "dev")
+	ctx := flowColor.SetCtxFlowColor(context.Background(), "local")
 	o, err := testWithExcel.New(t, info.filePath,
 		testWithExcel.WithCaseHandleFunc(func(ctx context.Context, t *testing.T, caseInfo testWithExcel.CaseInfo) (ret interface{}, err error) {
 			if caseInfo.Extend["delayTime"] != "" {

@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
+	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/yiqiang3344/gf-micro/flowColor"
 	"github.com/yiqiang3344/gf-micro/logging"
@@ -37,6 +38,13 @@ func GetGrpcCmdFunc(middleware MiddlewareForCmd, grpcRegFunc GrpcRegFunc) func(c
 			)}...,
 		)
 		s := grpcx.Server.New(c)
+		//设置服务的流量染色标识元数据，会跟随服务注册到注册中心去
+		s.Service(&gsvc.LocalService{
+			Name: c.Name,
+			Metadata: gsvc.Metadata{
+				flowColor.FlowColor: *flowColor.GetLocalFlowColor(),
+			},
+		})
 		//注册服务接口
 		grpcRegFunc(s)
 		s.Run()

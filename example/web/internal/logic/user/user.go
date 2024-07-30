@@ -9,6 +9,7 @@ import (
 	"github.com/yiqiang3344/gf-micro/auth"
 	userMicroV1 "github.com/yiqiang3344/gf-micro/example/user/api/user/v1"
 	"github.com/yiqiang3344/gf-micro/flowColor"
+	balancer "github.com/yiqiang3344/gf-micro/flowColor/balance"
 	logging2 "github.com/yiqiang3344/gf-micro/logging"
 	v1 "web/api/user/v1"
 	"web/internal/logging"
@@ -30,10 +31,13 @@ var userClient userMicroV1.UserClient
 func getUserClient() userMicroV1.UserClient {
 	if userClient == nil {
 		userClient = userMicroV1.NewUserClient(
-			grpcx.Client.MustNewGrpcClientConn("user", grpcx.Client.ChainUnary(
-				logging2.GrpcClientLoggerUnary,
-				flowColor.GrpcClientUnary,
-			)))
+			grpcx.Client.MustNewGrpcClientConn("user",
+				grpcx.Client.ChainUnary(
+					logging2.GrpcClientLoggerUnary,
+					flowColor.GrpcClientUnary,
+				),
+				balancer.WithFlowColor(),
+			))
 	}
 	return userClient
 }

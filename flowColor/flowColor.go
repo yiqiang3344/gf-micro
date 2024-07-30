@@ -7,6 +7,7 @@ import (
 )
 
 const ColorBase = "base"
+const FlowColor = "FLOW_COLOR"
 
 func GetLocalFlowColor() *string {
 	//根据环境标识获取颜色标识
