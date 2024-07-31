@@ -8,7 +8,7 @@ import (
 // WithFlowColor returns a grpc.DialOption which enables flow color load balancing.
 func WithFlowColor() grpc.DialOption {
 	b := grpcx.Balancer
-	flowColor := NewBuilderFlowColor()
-	b.Register(flowColor)
-	return b.WithName(flowColor.Name())
+	fc := NewBuilderFlowColor()
+	b.Register(fc)
+	return b.WithName(fc.Name())
 }

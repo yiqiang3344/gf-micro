@@ -2,8 +2,8 @@ package balancer
 
 import (
 	"context"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gsel"
-	"github.com/gogf/gf/v2/os/glog"
 	"github.com/yiqiang3344/gf-micro/flowColor"
 	"sync"
 
@@ -29,7 +29,7 @@ func (s *selectorFlowColor) Update(ctx context.Context, nodes gsel.Nodes) error 
 		}
 		str += node.Address() + "[" + node.Service().GetMetadata().Get(flowColor.FlowColor).String() + "]"
 	}
-	glog.Debugf(ctx, "Update nodes: %s\n", str)
+	g.Log().Debugf(ctx, "Update nodes: %s", str)
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	for _, v := range nodes {
@@ -65,6 +65,6 @@ func (s *selectorFlowColor) Pick(ctx context.Context) (node gsel.Node, done gsel
 	if node == nil {
 		return nil, nil, nil
 	}
-	glog.Debugf(ctx, "flow color[%s] Picked node[%s,%s]", fc, node.Address(), node.Service().GetMetadata().Get(flowColor.FlowColor).String())
+	g.Log().Debugf(ctx, "flow color[%s] Picked node[%s,%s]", fc, node.Address(), node.Service().GetMetadata().Get(flowColor.FlowColor).String())
 	return node, nil, nil
 }

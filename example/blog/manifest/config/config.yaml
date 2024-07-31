@@ -117,3 +117,7 @@ redis:
 xxljob:
   serverAddr: "http://127.0.0.1:8182/xxl-job-admin"
   token: ""
+
+# 流量染色
+flowColor:
+  open: false

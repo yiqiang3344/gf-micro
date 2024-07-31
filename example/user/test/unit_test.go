@@ -12,6 +12,7 @@ import (
 	"github.com/gogf/gf/v2/net/gclient"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
+	client2 "github.com/yiqiang3344/gf-micro/client"
 	logging2 "github.com/yiqiang3344/gf-micro/logging"
 	"github.com/yiqiang3344/gf-micro/testWithExcel"
 	"strings"
@@ -151,8 +152,7 @@ func GetClient(ctx context.Context) *gclient.Client {
 	}
 
 	prefix := fmt.Sprintf("http://127.0.0.1:%d", Port)
-	client := g.Client()
-	client.Use(logging2.HttpClientLogMiddleware)
+	client := client2.GetHttpClient(client2.WithLog(false))
 	client.SetPrefix(prefix)
 	return client
 }

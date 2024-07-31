@@ -2,6 +2,7 @@ package flowColor
 
 import (
 	"context"
+	"github.com/gogf/gf/v2/os/gcfg"
 	"google.golang.org/grpc/metadata"
 	"os"
 )
@@ -9,9 +10,13 @@ import (
 const ColorBase = "base"
 const FlowColor = "FLOW_COLOR"
 
+func IsOpen() bool {
+	return gcfg.Instance().MustGet(context.Background(), "flowColor.open").Bool()
+}
+
 func GetLocalFlowColor() *string {
 	//根据环境标识获取颜色标识
-	s := os.Getenv("FLOW_COLOR")
+	s := os.Getenv(FlowColor)
 	return &s
 }
 
@@ -44,17 +49,4 @@ func GetCtxFlowColor(ctx context.Context) *string {
 		}
 	}
 	return &color
-}
-
-func Match(ctx context.Context) *bool {
-	ret := false
-	//流量染色标识为空，当前系统为基准系统则返回true
-	if *GetCtxFlowColor(ctx) == "" && *GetLocalFlowColor() == ColorBase {
-		ret = true
-	}
-	//流量染色标识不为空，且与当前系统颜色标识一致则返回true
-	if *GetCtxFlowColor(ctx) != "" && *GetCtxFlowColor(ctx) == *GetLocalFlowColor() {
-		ret = true
-	}
-	return &ret
 }

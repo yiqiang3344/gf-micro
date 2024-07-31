@@ -8,6 +8,7 @@ import (
 	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/xxl-job/xxl-job-executor-go"
+	"github.com/yiqiang3344/gf-micro/cfg"
 	"github.com/yiqiang3344/gf-micro/logging"
 )
 
@@ -28,7 +29,7 @@ func GetXxljobCmdFunc(middleware MiddlewareForCmd, taskMap map[string]xxl.TaskFu
 		exec := xxl.NewExecutor(
 			xxl.ServerAddr(g.Cfg().MustGet(ctx, "xxljob.serverAddr").String()),
 			xxl.AccessToken(g.Cfg().MustGet(ctx, "xxljob.token").String()),
-			xxl.RegistryKey(g.Cfg().MustGet(ctx, "appName").String()), //执行器名称
+			xxl.RegistryKey(g.Cfg().MustGet(ctx, cfg.APPNAME).String()), //执行器名称
 			xxl.SetLogger(&logger{}),
 		)
 		exec.Init()

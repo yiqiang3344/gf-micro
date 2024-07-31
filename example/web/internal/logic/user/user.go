@@ -2,15 +2,12 @@ package user
 
 import (
 	"context"
-	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/yiqiang3344/gf-micro/auth"
+	"github.com/yiqiang3344/gf-micro/client"
 	userMicroV1 "github.com/yiqiang3344/gf-micro/example/user/api/user/v1"
-	"github.com/yiqiang3344/gf-micro/flowColor"
-	balancer "github.com/yiqiang3344/gf-micro/flowColor/balance"
-	logging2 "github.com/yiqiang3344/gf-micro/logging"
 	v1 "web/api/user/v1"
 	"web/internal/logging"
 	"web/internal/service"
@@ -26,20 +23,8 @@ func init() {
 	service.RegisterUser(New())
 }
 
-var userClient userMicroV1.UserClient
-
 func getUserClient() userMicroV1.UserClient {
-	if userClient == nil {
-		userClient = userMicroV1.NewUserClient(
-			grpcx.Client.MustNewGrpcClientConn("user",
-				grpcx.Client.ChainUnary(
-					logging2.GrpcClientLoggerUnary,
-					flowColor.GrpcClientUnary,
-				),
-				balancer.WithFlowColor(),
-			))
-	}
-	return userClient
+	return client.GetGrpcClient("user", userMicroV1.NewUserClient)
 }
 
 func (s *sUser) UserCreate(ctx context.Context, req *v1.UserCreateReq) (res *v1.UserCreateRes, err error) {

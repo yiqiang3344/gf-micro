@@ -2,12 +2,11 @@ package blog
 
 import (
 	"context"
-	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/yiqiang3344/gf-micro/auth"
+	"github.com/yiqiang3344/gf-micro/client"
 	blogMicroV1 "github.com/yiqiang3344/gf-micro/example/blog/api/blog/v1"
-	logging2 "github.com/yiqiang3344/gf-micro/logging"
 	"strings"
 	v1 "web/api/blog/v1"
 	"web/internal/logging"
@@ -24,15 +23,8 @@ func init() {
 	service.RegisterBlog(New())
 }
 
-var blogClient blogMicroV1.BlogClient
-
 func getBlogClient() blogMicroV1.BlogClient {
-	if blogClient == nil {
-		blogClient = blogMicroV1.NewBlogClient(grpcx.Client.MustNewGrpcClientConn("blog", grpcx.Client.ChainUnary(
-			logging2.GrpcClientLoggerUnary,
-		)))
-	}
-	return blogClient
+	return client.GetGrpcClient("blog", blogMicroV1.NewBlogClient)
 }
 
 func (c *sBlog) BlogCreate(ctx context.Context, req *v1.BlogCreateReq) (res *v1.BlogCreateRes, err error) {

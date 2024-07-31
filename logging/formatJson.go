@@ -7,6 +7,7 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/yiqiang3344/gf-micro/cfg"
 	"strings"
 )
 
@@ -27,7 +28,7 @@ func HandlerJson(ctx context.Context, in *glog.HandlerInput) {
 	//根据日志文件判断日志类别
 	logCategory := strings.Split(in.Logger.GetConfig().File, ".")[0]
 	//在配置中的才json做转换
-	if gstr.InArray(g.Config().MustGet(ctx, "jsonFormatLogs").Strings(), logCategory) {
+	if gstr.InArray(g.Config().MustGet(ctx, cfg.JSONFORMATLOGS).Strings(), logCategory) {
 		output := HandlerOutputJson{
 			Time:       in.TimeFormat,
 			TraceId:    in.TraceId,

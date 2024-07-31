@@ -103,3 +103,7 @@ redis:
     address: 127.0.0.1:6379
     db: 1
   #    pass:
+
+# 流量染色
+flowColor:
+  open: false
