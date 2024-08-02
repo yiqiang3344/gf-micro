@@ -27,19 +27,30 @@ var ignoreErrCodeStrs = []string{
 }
 
 func (l ErrorLog) Log(ctx context.Context, err ...error) {
+	stack := ""
 	if len(err) > 0 {
-		code := gerror.Code(err[0])
+		e := err[0]
+		code := gerror.Code(e)
 		l.Code = code.Code()
 		l.Message = code.Message()
 		l.Detail = code.Detail()
 		if l.Detail == nil {
-			l.Detail = err[0].Error()
+			l.Detail = e.Error()
+		}
+		if gerror.HasStack(e) {
+			stack = "\n" + gerror.Stack(e)
 		}
 	}
 	//过滤用户操作检查类异常，比如参数校验，信息检查之类的
 	if gstr.InArray(ignoreErrCodeStrs, strconv.Itoa(l.Code)) || l.Code > 300 {
 		return
 	}
-
-	g.Log("error").Error(ctx, l)
+	log := g.Log("error").Stack(true, 1)
+	vs := []interface{}{l}
+	if stack != "" {
+		//首先使用自定义的stack信息，没有则使用默认堆栈信息
+		log.SetStack(false)
+		vs = append(vs, stack)
+	}
+	log.Error(ctx, vs...)
 }
