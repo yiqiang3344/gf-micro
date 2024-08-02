@@ -367,6 +367,8 @@ github.com/yiqiang3344/gf/v2 v2.0.0-20240709060659-c8e5e2035911 h1:Pp+3T3ld4M7fj
 github.com/yiqiang3344/gf/v2 v2.0.0-20240709060659-c8e5e2035911/go.mod h1:ZtSY9rG5M40AgW0NY2DSXy4A913qWrpIlVpb9IAm2+s=
 github.com/yiqiang3344/rocketmq-client-go v1.0.0 h1:M7ShDjRtFL7jvdm8RvBIPfG/PsjjIt+aNlYMA6FU+fs=
 github.com/yiqiang3344/rocketmq-client-go v1.0.0/go.mod h1:qyVWBjzeS/XCVzjv1BVNYkXetDv970la9xX8Npqh9HQ=
+github.com/yiqiang3344/rocketmq-client-go v1.0.1 h1:9F3WMbYCrBXIOmmAx6WOxUUXe3e1rMbt2Y60ztDsUWk=
+github.com/yiqiang3344/rocketmq-client-go v1.0.1/go.mod h1:qyVWBjzeS/XCVzjv1BVNYkXetDv970la9xX8Npqh9HQ=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=

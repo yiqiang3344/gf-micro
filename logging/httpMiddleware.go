@@ -15,13 +15,13 @@ import (
 	"time"
 )
 
-func MiddlewareLogFormatJson(r *ghttp.Request) {
+func HttpLogFormatJsonMiddleware(r *ghttp.Request) {
 	glog.SetDefaultHandler(HandlerJson)
 
 	r.Middleware.Next()
 }
 
-func MiddlewareHandlerAccessLog(r *ghttp.Request) {
+func HttpAccessLogMiddleware(r *ghttp.Request) {
 	var (
 		scheme = "http"
 		proto  = r.Header.Get("X-Forwarded-Proto")
@@ -57,7 +57,7 @@ func MiddlewareHandlerAccessLog(r *ghttp.Request) {
 	}.Log(r.GetCtx())
 }
 
-func MiddlewareHandlerErrorLog(r *ghttp.Request) {
+func HttpErrorLogMiddleware(r *ghttp.Request) {
 	r.Middleware.Next()
 
 	err := r.GetError()
@@ -71,7 +71,7 @@ func MiddlewareHandlerErrorLog(r *ghttp.Request) {
 	}.Log(r.Context(), err)
 }
 
-func MiddlewareClientLog(c *gclient.Client, r *http.Request) (response *gclient.Response, err error) {
+func HttpClientLogMiddleware(c *gclient.Client, r *http.Request) (response *gclient.Response, err error) {
 	var (
 		ctx    = r.Context()
 		start  = time.Now()

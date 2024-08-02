@@ -5,6 +5,7 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/gcmd"
+	"github.com/yiqiang3344/gf-micro/cfg"
 	"github.com/yiqiang3344/gf-micro/logging"
 	"github.com/yiqiang3344/gf-micro/response"
 )
@@ -41,12 +42,12 @@ func GetHttpCmdFunc(middleware MiddlewareForCmd, useMiddlewares []ghttp.HandlerF
 		shutdown := middleware(ctx)
 		defer shutdown()
 
-		s := g.Server()
+		s := g.Server(g.Cfg().MustGet(ctx, cfg.APPNAME).String())
 		middlewares := append([]ghttp.HandlerFunc{
-			logging.MiddlewareLogFormatJson,
-			logging.MiddlewareHandlerAccessLog,
-			logging.MiddlewareHandlerErrorLog,
-			response.MiddlewareHandlerResponse,
+			logging.HttpLogFormatJsonMiddleware,
+			logging.HttpAccessLogMiddleware,
+			logging.HttpErrorLogMiddleware,
+			response.HttpResponseMiddleware,
 		}, useMiddlewares...)
 		s.Use(middlewares...)
 		for _, v := range serverGroups {

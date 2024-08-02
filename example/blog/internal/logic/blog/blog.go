@@ -16,6 +16,7 @@ import (
 	"github.com/yiqiang3344/gf-micro/example/blog/internal/model/do"
 	"github.com/yiqiang3344/gf-micro/example/blog/internal/model/entity"
 	"github.com/yiqiang3344/gf-micro/example/blog/internal/service"
+	"github.com/yiqiang3344/gf-micro/flowColor"
 	rocketmq_client "github.com/yiqiang3344/rocketmq-client-go"
 	"time"
 )
@@ -224,6 +225,7 @@ func (s *sBlog) BatDelete(ctx context.Context, ids []uint64) (batNo string, err 
 			DebugHandlerFunc: func(msg string) {
 				g.Log().Debug(ctx, msg)
 			},
+			FlowColor: flowColor.GetCtxFlowColor(ctx),
 		},
 		rocketmq_client.WithProducerOptionTopics(BatDeleteTopic),
 		rocketmq_client.WithProducerOptionMaxAttempts(3),

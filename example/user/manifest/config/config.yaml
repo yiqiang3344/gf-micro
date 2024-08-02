@@ -114,3 +114,7 @@ redis:
     address: 127.0.0.1:6379
     db: 2
 #    pass:
+
+# 流量染色
+flowColor:
+  open: false

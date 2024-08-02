@@ -8,8 +8,8 @@ import (
 	"time"
 )
 
-// UnarySLogger 服务端日志拦截器
-func UnarySLogger(
+// GrpcServerLoggerUnary grpc服务端日志拦截器
+func GrpcServerLoggerUnary(
 	ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler,
 ) (interface{}, error) {
 	var (
@@ -17,22 +17,22 @@ func UnarySLogger(
 		res, err = handler(ctx, req)
 		duration = time.Since(start)
 	)
-	handleAccessLog(ctx, err, duration, info, req, res)
-	handleErrorLog(ctx, err, info, req)
+	handleGrpcAccessLog(ctx, err, duration, info, req, res)
+	handleGrpcErrorLog(ctx, err, info, req)
 	return res, err
 }
 
-// UnaryCLogger 客户端日志拦截器
-func UnaryCLogger(ctx context.Context, method string, req, reply any, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+// GrpcClientLoggerUnary grpc客户端日志拦截器
+func GrpcClientLoggerUnary(ctx context.Context, method string, req, reply any, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 	start := time.Now()
 	err := invoker(ctx, method, req, reply, cc, opts...)
 	duration := time.Since(start)
-	handleClientLog(ctx, method, duration, req.(proto.Message), reply.(proto.Message), err)
+	handleGrpcClientLog(ctx, method, duration, req.(proto.Message), reply.(proto.Message), err)
 	return err
 }
 
-// handleAccessLog 处理服务端访问日志
-func handleAccessLog(
+// handleGrpcAccessLog 处理服务端访问日志
+func handleGrpcAccessLog(
 	ctx context.Context, err error, duration time.Duration, info *grpc.UnaryServerInfo, req, res interface{},
 ) {
 	GrpcAccessLog{
@@ -43,8 +43,8 @@ func handleAccessLog(
 	}.Log(ctx, err)
 }
 
-// handleClientLog 处理客户端对外访问的日志
-func handleClientLog(ctx context.Context, path string, duration time.Duration, req, res interface{}, err error) {
+// handleGrpcClientLog 处理客户端对外访问的日志
+func handleGrpcClientLog(ctx context.Context, path string, duration time.Duration, req, res interface{}, err error) {
 	GrpcClientLog{
 		Path: path,
 		Cost: fmt.Sprintf("%.3fms", float64(duration)/1e6),
@@ -53,8 +53,8 @@ func handleClientLog(ctx context.Context, path string, duration time.Duration, r
 	}.Log(ctx, err)
 }
 
-// handleErrorLog handles the error logging for server.
-func handleErrorLog(ctx context.Context, err error, info *grpc.UnaryServerInfo, req interface{}) {
+// handleGrpcErrorLog handles the error logging for server.
+func handleGrpcErrorLog(ctx context.Context, err error, info *grpc.UnaryServerInfo, req interface{}) {
 	if err == nil {
 		return
 	}

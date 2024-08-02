@@ -11,6 +11,7 @@ import (
 	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/glog"
 	gcfg_apollo "github.com/yiqiang3344/gcfg-apollo"
+	"github.com/yiqiang3344/gf-micro/cfg"
 	"github.com/yiqiang3344/gf-micro/logging"
 )
 
@@ -34,9 +35,9 @@ func GetGrpcMiddleware() MiddlewareForCmd {
 		glog.SetDefaultHandler(logging.HandlerJson)
 
 		// 链路追踪初始化
-		if !gcfg.Instance().MustGet(ctx, "otlp").IsNil() {
+		if !gcfg.Instance().MustGet(ctx, cfg.OTLP).IsNil() {
 			shutdown, err := otlpgrpc.Init(
-				gcfg.Instance().MustGet(ctx, "appName").String(),
+				gcfg.Instance().MustGet(ctx, cfg.APPNAME).String(),
 				gcfg.Instance().MustGet(ctx, "otlp.endpoint").String(),
 				gcfg.Instance().MustGet(ctx, "otlp.traceToken").String(),
 			)
@@ -48,13 +49,8 @@ func GetGrpcMiddleware() MiddlewareForCmd {
 		}
 
 		// grpc服务注册发现
-		if !gcfg.Instance().MustGet(ctx, "registry.grpcEtcd").IsNil() {
-			grpcx.Resolver.Register(etcd.New(gcfg.Instance().MustGet(ctx, "registry.grpcEtcd").String()))
-		}
-
-		// ghttp服务注册发现
-		if !gcfg.Instance().MustGet(ctx, "registry.gsvcEtcd").IsNil() {
-			gsvc.SetRegistry(etcd.New(gcfg.Instance().MustGet(ctx, "registry.gsvcEtcd").String()))
+		if !gcfg.Instance().MustGet(ctx, cfg.REGISTRY_GRPC).IsNil() {
+			grpcx.Resolver.Register(etcd.New(gcfg.Instance().MustGet(ctx, cfg.REGISTRY_GRPC).String()))
 		}
 
 		// 设置db全局redis缓存配置
@@ -86,9 +82,9 @@ func GetHttpMiddleware() MiddlewareForCmd {
 		}
 
 		// 链路追踪初始化
-		if !gcfg.Instance().MustGet(ctx, "otlp").IsNil() {
+		if !gcfg.Instance().MustGet(ctx, cfg.OTLP).IsNil() {
 			shutdown, err := otlpgrpc.Init(
-				gcfg.Instance().MustGet(ctx, "appName").String(),
+				gcfg.Instance().MustGet(ctx, cfg.APPNAME).String(),
 				gcfg.Instance().MustGet(ctx, "otlp.endpoint").String(),
 				gcfg.Instance().MustGet(ctx, "otlp.traceToken").String(),
 			)
@@ -99,14 +95,9 @@ func GetHttpMiddleware() MiddlewareForCmd {
 			}
 		}
 
-		// grpc服务注册发现
-		if !gcfg.Instance().MustGet(ctx, "registry.grpcEtcd").IsNil() {
-			grpcx.Resolver.Register(etcd.New(gcfg.Instance().MustGet(ctx, "registry.grpcEtcd").String()))
-		}
-
 		// ghttp服务注册发现
-		if !gcfg.Instance().MustGet(ctx, "registry.gsvcEtcd").IsNil() {
-			gsvc.SetRegistry(etcd.New(gcfg.Instance().MustGet(ctx, "registry.gsvcEtcd").String()))
+		if !gcfg.Instance().MustGet(ctx, cfg.REGISTRY_HTTP).IsNil() {
+			gsvc.SetRegistry(etcd.New(gcfg.Instance().MustGet(ctx, cfg.REGISTRY_HTTP).String()))
 		}
 
 		// 设置db全局redis缓存配置
