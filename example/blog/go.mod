@@ -106,7 +106,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/gogf/gf/v2 => github.com/yiqiang3344/gf/v2 v2.0.0-20240709060659-c8e5e2035911
+replace github.com/gogf/gf/v2 => github.com/yiqiang3344/gf/v2 v2.0.0-20240805062730-6a0c4f1cb8ba
 
 replace github.com/yiqiang3344/gf-micro v0.0.0 => ../../
 

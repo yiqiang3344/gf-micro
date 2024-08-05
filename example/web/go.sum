@@ -344,8 +344,8 @@ github.com/xxl-job/xxl-job-executor-go v1.2.0 h1:MTl2DpwrK2+hNjRRks2k7vB3oy+3onq
 github.com/xxl-job/xxl-job-executor-go v1.2.0/go.mod h1:bUFhz/5Irp9zkdYk5MxhQcDDT6LlZrI8+rv5mHtQ1mo=
 github.com/yiqiang3344/gcfg-apollo v1.1.0 h1:pZk1ZV4Y16tAeCu2sTU//ZejNgQOVDMGGRTbiRPcgVM=
 github.com/yiqiang3344/gcfg-apollo v1.1.0/go.mod h1:TRI44S2j1YO1mRQGRTBAiPYPC7VyjryIIRyXxMvZdOo=
-github.com/yiqiang3344/gf/v2 v2.0.0-20240709060659-c8e5e2035911 h1:Pp+3T3ld4M7fj7OZfpuFn483wuFJxaa97DR4wrchlHg=
-github.com/yiqiang3344/gf/v2 v2.0.0-20240709060659-c8e5e2035911/go.mod h1:ZtSY9rG5M40AgW0NY2DSXy4A913qWrpIlVpb9IAm2+s=
+github.com/yiqiang3344/gf/v2 v2.0.0-20240805062730-6a0c4f1cb8ba h1:wThoANaXx5Xm8ZcGjkpLk1TPkZnw5BG7chQ7+tXugTQ=
+github.com/yiqiang3344/gf/v2 v2.0.0-20240805062730-6a0c4f1cb8ba/go.mod h1:ZtSY9rG5M40AgW0NY2DSXy4A913qWrpIlVpb9IAm2+s=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=

@@ -25,7 +25,7 @@ server:
 
 logger:
   path: "/var/log/gf-micro/web/app"  # 日志文件路径。默认为空，表示关闭，仅输出到终端
-  file: "app.log"                                           # 日志文件格式。默认为"{Y-m-d}.log"
+  file: "app.{Ymd}.last.log"                                # 日志文件格式。默认为"{Y-m-d}.log"
   prefix: ""                                                # 日志内容输出前缀。默认为空
   level: "all"                                              # 日志输出级别
   timeFormat: "2006-01-02 15:04:05.000"                     # 自定义日志输出的时间格式，使用Golang标准的时间格式配置
@@ -39,7 +39,7 @@ logger:
   rotateCheckInterval: "1h"                                 # 滚动切分的时间检测间隔，一般不需要设置。默认为1小时
   biz:
     path: "/var/log/gf-micro/web/biz"
-    file: "biz.log"
+    file: "biz.{Ymd}.last.log"
     level: "all"
     timeFormat: "2006-01-02 15:04:05.000"
     stdout: false
@@ -51,7 +51,7 @@ logger:
     rotateCheckInterval: "1h"
   access:
     path: "/var/log/gf-micro/web/access"
-    file: "access.log"
+    file: "access.{Ymd}.last.log"
     level: "all"
     timeFormat: "2006-01-02 15:04:05.000"
     stdout: false
@@ -63,7 +63,7 @@ logger:
     rotateCheckInterval: "1h"
   webclient:
     path: "/var/log/gf-micro/web/webclient"
-    file: "webclient.log"
+    file: "webclient.{Ymd}.last.log"
     level: "all"
     timeFormat: "2006-01-02 15:04:05.000"
     stdout: false
@@ -75,7 +75,7 @@ logger:
     rotateCheckInterval: "1h"
   error:
     path: "/var/log/gf-micro/web/error"
-    file: "error.log"
+    file: "error.{Ymd}.last.log"
     level: "all"
     timeFormat: "2006-01-02 15:04:05.000"
     stdout: false

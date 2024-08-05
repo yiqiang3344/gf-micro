@@ -7,7 +7,6 @@ go 1.21
 require (
 	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.7.1
 	github.com/gogf/gf/contrib/nosql/redis/v2 v2.7.1
-	github.com/gogf/gf/contrib/rpc/grpcx/v2 v2.7.1
 	github.com/gogf/gf/v2 v2.7.1
 	github.com/yiqiang3344/gcfg-apollo v1.1.0
 	github.com/yiqiang3344/gf-micro v0.0.0
@@ -35,6 +34,7 @@ require (
 	github.com/go-sql-driver/mysql v1.8.1 // indirect
 	github.com/gogf/gf/contrib/registry/etcd/v2 v2.7.1 // indirect
 	github.com/gogf/gf/contrib/registry/file/v2 v2.7.1 // indirect
+	github.com/gogf/gf/contrib/rpc/grpcx/v2 v2.7.1 // indirect
 	github.com/gogf/gf/contrib/trace/otlpgrpc/v2 v2.7.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
@@ -90,7 +90,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/gogf/gf/v2 => github.com/yiqiang3344/gf/v2 v2.0.0-20240709060659-c8e5e2035911
+replace github.com/gogf/gf/v2 => github.com/yiqiang3344/gf/v2 v2.0.0-20240805062730-6a0c4f1cb8ba
 
 replace github.com/yiqiang3344/gf-micro/example/user v0.0.0 => ../user
 
