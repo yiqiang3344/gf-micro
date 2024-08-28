@@ -12,9 +12,11 @@ const (
 )
 
 type User struct {
-	Id       uint32 `json:"id" dc:"ID"`
-	Nickname string `json:"nickname" dc:"昵称"`
-	Token    string `json:"token" dc:"token"`
+	Id         uint32      `json:"id" dc:"ID"`
+	Nickname   string      `json:"nickname" dc:"昵称"`
+	Token      string      `json:"token" dc:"token"`
+	Permission interface{} `json:"permission" dc:"权限数据"`
+	Data       interface{} `json:"data" dc:"自定义用户数据"`
 }
 
 type ContextValue struct {
