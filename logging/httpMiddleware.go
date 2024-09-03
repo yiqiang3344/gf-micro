@@ -89,7 +89,14 @@ func HttpClientLogMiddleware(c *gclient.Client, r *http.Request) (response *gcli
 	default:
 		bodyBytes, _ := io.ReadAll(r.Body)
 		r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+		//先通过字符格式解析
 		req, _ = gstr.Parse(string(bodyBytes))
+		//如果解析失败，则尝试json格式解析
+		if len(req) == 0 && len(bodyBytes) > 0 {
+			if j, err1 := gjson.DecodeToJson(bodyBytes); err1 == nil {
+				req = j.Map()
+			}
+		}
 	}
 
 	response, err = c.Next(r)
