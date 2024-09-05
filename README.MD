@@ -24,6 +24,7 @@
 - [grpc.go](cmd%2Fgrpc.go) grpc服务，规范了grpc服务初始化方式。
 - [consume.go](cmd%2Fconsume.go) 消费者服务，规范了消息队列消费者初始化方式，并打通了链路追踪。
 - [xxljob.go](cmd%2Fxxljob.go) xxljob服务，规范了定时任务初始化方式，并打通了链路追踪。
+- [checkCfgCmd.go](cmd%2FcheckCfgCmd.go) 配置检查命令封装。
 
 ## 日志
 
@@ -45,7 +46,7 @@
 - [testWithExcel](testWithExcel) excel自动化测试框架，可基于excel来实现对单个接口的全方位测试，也可以基于excel来实现对某个业务场景的全流程测试。此外封装了基于openApi生成http接口单元测试用例excel的cmd。
 
 ## 配置扫描
-待完善，用于检查配置是否规范，防止胡乱配置。
+- [cfg](cfg) 用于检查配置是否规范，防止胡乱配置。
 
 # 示例
 

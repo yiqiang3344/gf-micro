@@ -330,8 +330,8 @@ github.com/xuri/nfp v0.0.0-20230919160717-d98342af3f05 h1:qhbILQo1K3mphbwKh1vNm4
 github.com/xuri/nfp v0.0.0-20230919160717-d98342af3f05/go.mod h1:WwHg+CVyzlv/TX9xqBFXEZAuxOPxn2k1GNHwG41IIUQ=
 github.com/xxl-job/xxl-job-executor-go v1.2.0 h1:MTl2DpwrK2+hNjRRks2k7vB3oy+3onqm9OaSarneeLQ=
 github.com/xxl-job/xxl-job-executor-go v1.2.0/go.mod h1:bUFhz/5Irp9zkdYk5MxhQcDDT6LlZrI8+rv5mHtQ1mo=
-github.com/yiqiang3344/gcfg-apollo v1.1.0 h1:pZk1ZV4Y16tAeCu2sTU//ZejNgQOVDMGGRTbiRPcgVM=
-github.com/yiqiang3344/gcfg-apollo v1.1.0/go.mod h1:TRI44S2j1YO1mRQGRTBAiPYPC7VyjryIIRyXxMvZdOo=
+github.com/yiqiang3344/gcfg-apollo v1.1.1 h1:4kOY+xqb40ivS9gjPbvgxYXSRuHF3hYxrbzPYIMlJjQ=
+github.com/yiqiang3344/gcfg-apollo v1.1.1/go.mod h1:TRI44S2j1YO1mRQGRTBAiPYPC7VyjryIIRyXxMvZdOo=
 github.com/yiqiang3344/gf/v2 v2.0.0-20240805062730-6a0c4f1cb8ba h1:wThoANaXx5Xm8ZcGjkpLk1TPkZnw5BG7chQ7+tXugTQ=
 github.com/yiqiang3344/gf/v2 v2.0.0-20240805062730-6a0c4f1cb8ba/go.mod h1:ZtSY9rG5M40AgW0NY2DSXy4A913qWrpIlVpb9IAm2+s=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=

@@ -21,7 +21,7 @@ type ConsumeFunc func(ctx context.Context, parser *gcmd.Parser) (stopFunc func()
 //	}
 func GetConsumeCmdFunc(name string, middleware MiddlewareForCmd, consumeFunc ConsumeFunc) func(ctx context.Context, parser *gcmd.Parser) error {
 	return func(ctx context.Context, parser *gcmd.Parser) (err error) {
-		shutdown := middleware(ctx)
+		shutdown := middleware(ctx, parser)
 		defer shutdown()
 
 		stopFunc, err := consumeFunc(ctx, parser)

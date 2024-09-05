@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gogf/gf/v2/os/gcfg"
+	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/util/gconv"
+	gcfg_apollo "github.com/yiqiang3344/gcfg-apollo"
 	"reflect"
 	"strings"
 )
@@ -75,6 +77,78 @@ var checkMsgMap = map[CheckLevel]map[string]string{
 	ProposalNotZero:  {"level": "建议", "msg": "非零值"},
 	OptionalInput:    {"level": "提醒", "msg": "选填"},
 	ProposalZero:     {"level": "提醒", "msg": "为零值"},
+}
+
+func Check(ctx context.Context, parser *gcmd.Parser, apolloIp string) {
+	var (
+		errs  []string
+		env   = DEV
+		rules []checkOpt
+	)
+
+	//环境配置
+	envCfgV := parser.GetOpt("env")
+	if !envCfgV.IsNil() {
+		env = ENV(envCfgV.String())
+	}
+	if !contains([]ENV{PROD, DEV}, env) {
+		panic("env参数错误")
+	}
+
+	//判断是否检查apollo配置
+	if !parser.GetOpt("all").IsNil() || !parser.GetOpt("apollo").IsNil() {
+		errs = append(errs, checkRules(ctx, gcfg.Instance(), env, apolloRules)...)
+	}
+
+	//先判断是否有apollo配置，有的话接入apollo
+	if !gcfg.Instance().MustGet(ctx, "apollo").IsNil() {
+		adapter, err := gcfg_apollo.CreateAdapterApollo(ctx, apolloIp)
+		if err != nil {
+			panic(err)
+		}
+		gcfg.Instance().SetAdapter(adapter)
+	}
+
+	//准备通用规则
+	rules = append(rules, commonRules...)
+	ruleMap := getRuleListMap()
+	//是否有指定要检查的配置
+	noAppoint := true
+	for k, _ := range parser.GetOptAll() {
+		if !contains([]string{"all", "env", "help"}, k) {
+			noAppoint = false
+			break
+		}
+	}
+	if !parser.GetOpt("all").IsNil() {
+		//准备所有规则
+		ruleMap.Iterator(func(key, value interface{}) bool {
+			rules = append(rules, value.([]checkOpt)...)
+			return true
+		})
+	} else if noAppoint {
+		//对已有配置准备对应规则
+		ruleMap.Iterator(func(key, value interface{}) bool {
+			if !gcfg.Instance().MustGet(ctx, key.(string)).IsNil() {
+				rules = append(rules, value.([]checkOpt)...)
+			}
+			return true
+		})
+	} else {
+		//准备指定规则
+		for k, _ := range parser.GetOptAll() {
+			if r := ruleMap.Get(k); r != nil {
+				rules = append(rules, r.([]checkOpt)...)
+			}
+		}
+	}
+
+	//按规则检查配置
+	errs = append(errs, checkRules(ctx, gcfg.Instance(), env, rules)...)
+
+	//打印结果
+	printErr(errs)
+	return
 }
 
 func checkRules(ctx context.Context, gcfg *gcfg.Config, env ENV, rules []checkOpt) (errs []string) {
@@ -409,8 +483,6 @@ func checkExtra(v interface{}, kind reflect.Kind, extra map[ExtraKey]interface{}
 			}
 		case CO:
 			switch {
-			case kind == reflect.String:
-				panic(fmt.Errorf("string类型不支持ExtraKey:%v", k1))
 			case kind == reflect.Bool:
 				panic(fmt.Errorf("bool类型不支持ExtraKey:%v", k1))
 			case kind == reflect.Int64:
@@ -428,6 +500,7 @@ func checkExtra(v interface{}, kind reflect.Kind, extra map[ExtraKey]interface{}
 				return
 			}
 			switch {
+			case kind == reflect.String && strings.Contains(gconv.String(v), gconv.String(v1)):
 			case kind == reflect.Map && containsKey(v.(map[string]interface{}), gconv.String(v1)):
 			case kind == reflect.Slice && contains(v.([]interface{}), v1):
 			default:

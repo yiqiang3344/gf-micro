@@ -28,7 +28,7 @@ func HandlerJson(ctx context.Context, in *glog.HandlerInput) {
 	//根据日志文件判断日志类别
 	logCategory := strings.Split(in.Logger.GetConfig().File, ".")[0]
 	//在配置中的才json做转换
-	if gstr.InArray(g.Config().MustGet(ctx, cfg.JSONFORMATLOGS).Strings(), logCategory) {
+	if gstr.InArray(strings.Split(g.Config().MustGet(ctx, cfg.JSONFORMATLOGS).String(), ","), logCategory) {
 		output := HandlerOutputJson{
 			Time:       in.TimeFormat,
 			TraceId:    in.TraceId,

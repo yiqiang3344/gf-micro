@@ -9,22 +9,23 @@ import (
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/gf/v2/os/gcfg"
+	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/os/glog"
 	gcfg_apollo "github.com/yiqiang3344/gcfg-apollo"
 	"github.com/yiqiang3344/gf-micro/cfg"
 	"github.com/yiqiang3344/gf-micro/logging"
 )
 
-type MiddlewareForCmd func(ctx context.Context) (stopFunc func())
+type MiddlewareForCmd func(ctx context.Context, parser *gcmd.Parser) (stopFunc func())
 
 // GetGrpcMiddleware grpc服务命令全局中间件
 func GetGrpcMiddleware() MiddlewareForCmd {
-	return func(ctx context.Context) (stopFunc func()) {
+	return func(ctx context.Context, parser *gcmd.Parser) (stopFunc func()) {
 		var shutdownArr []func()
 
 		//配置中心
 		if !gcfg.Instance().MustGet(ctx, "apollo").IsNil() {
-			adapter, err := gcfg_apollo.CreateAdapterApollo(ctx)
+			adapter, err := gcfg_apollo.CreateAdapterApollo(ctx, GetCommonArguments(ctx, parser, ApolloIP).String())
 			if err != nil {
 				panic(err)
 			}
@@ -69,12 +70,12 @@ func GetGrpcMiddleware() MiddlewareForCmd {
 
 // GetHttpMiddleware http服务命令全局中间件
 func GetHttpMiddleware() MiddlewareForCmd {
-	return func(ctx context.Context) (stopFunc func()) {
+	return func(ctx context.Context, parser *gcmd.Parser) (stopFunc func()) {
 		var shutdownArr []func()
 
 		//配置中心
 		if !gcfg.Instance().MustGet(ctx, "apollo").IsNil() {
-			adapter, err := gcfg_apollo.CreateAdapterApollo(ctx)
+			adapter, err := gcfg_apollo.CreateAdapterApollo(ctx, GetCommonArguments(ctx, parser, ApolloIP).String())
 			if err != nil {
 				panic(err)
 			}

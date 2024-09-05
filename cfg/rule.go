@@ -8,8 +8,8 @@ import (
 var (
 	commonRules = []checkOpt{
 		{Pattern: APPNAME, Level: MustInput, Kind: reflect.String, Env: []ENV{PROD, DEV}},
-		{Pattern: JSONFORMATLOGS, Level: MustInput, Kind: reflect.Slice, Extra: map[ExtraKey]interface{}{CO: "access"}, Env: []ENV{PROD, DEV}},
-		{Pattern: JSONFORMATLOGS, Level: MustInput, Kind: reflect.Slice, Extra: map[ExtraKey]interface{}{CO: "webclient"}, Env: []ENV{PROD, DEV}},
+		{Pattern: JSONFORMATLOGS, Level: MustInput, Kind: reflect.String, Extra: map[ExtraKey]interface{}{CO: "access"}, Env: []ENV{PROD, DEV}},
+		{Pattern: JSONFORMATLOGS, Level: MustInput, Kind: reflect.String, Extra: map[ExtraKey]interface{}{CO: "webclient"}, Env: []ENV{PROD, DEV}},
 		{Pattern: LOGGER, Level: MustInput, Kind: reflect.Map, Env: []ENV{PROD, DEV}},
 		{Pattern: LOGGER + ".path", Level: MustInputNotZero, Kind: reflect.String, Env: []ENV{PROD, DEV}},
 		{Pattern: LOGGER + ".file", Level: MustInputNotZero, Kind: reflect.String, Extra: map[ExtraKey]interface{}{EQ: "app.{Ymd}.last.log"}, Env: []ENV{PROD, DEV}},

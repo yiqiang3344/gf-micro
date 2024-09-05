@@ -8,7 +8,7 @@ require (
 	github.com/gogf/gf/contrib/drivers/mysql/v2 v2.7.1
 	github.com/gogf/gf/contrib/nosql/redis/v2 v2.7.1
 	github.com/gogf/gf/v2 v2.7.1
-	github.com/yiqiang3344/gcfg-apollo v1.1.0
+	github.com/yiqiang3344/gcfg-apollo v1.1.1
 	github.com/yiqiang3344/gf-micro v0.0.0
 	github.com/yiqiang3344/gf-micro/example/blog v0.0.0
 	github.com/yiqiang3344/gf-micro/example/user v0.0.0

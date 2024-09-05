@@ -26,10 +26,11 @@ type GrpcRegFunc func(server *grpcx.GrpcServer)
 //	}
 func GetGrpcCmdFunc(middleware MiddlewareForCmd, grpcRegFunc GrpcRegFunc) func(ctx context.Context, parser *gcmd.Parser) error {
 	return func(ctx context.Context, parser *gcmd.Parser) (err error) {
-		shutdown := middleware(ctx)
+		shutdown := middleware(ctx, parser)
 		defer shutdown()
 
 		c := grpcx.Server.NewConfig()
+		c.Address = GetCommonArguments(ctx, parser, Port, true).String()
 		c.Options = append(c.Options, []grpc.ServerOption{
 			grpcx.Server.ChainUnary(
 				flowColor.GrpcServerUnary,

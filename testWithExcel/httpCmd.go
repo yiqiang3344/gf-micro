@@ -10,6 +10,7 @@ import (
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	gcfg_apollo "github.com/yiqiang3344/gcfg-apollo"
+	"github.com/yiqiang3344/gf-micro/cmd"
 	"strings"
 )
 
@@ -18,7 +19,7 @@ var HttpCmd = &gcmd.Command{
 	Usage:       "./main genUnitTestExcel",
 	Brief:       "Gen Unit Test Excel",
 	Description: "注意：执行之前请确保openApi开启，且本地http服务已启动，且配置文件中指定了服务端口，脚本会根据配置文件自动获取openApi的json文件并生成单元测试用例的excel模版",
-	Arguments: []gcmd.Argument{
+	Arguments: append(cmd.CommonArguments, []gcmd.Argument{
 		{
 			Name:   "output",
 			Short:  "o",
@@ -40,11 +41,11 @@ var HttpCmd = &gcmd.Command{
 			IsArg:  false,
 			Orphan: false,
 		},
-	},
+	}...),
 	Func: func(ctx context.Context, parser *gcmd.Parser) (err error) {
 		//接入配置中心
 		if gcfg.Instance().MustGet(ctx, "apollo") != nil {
-			adapter, err := gcfg_apollo.CreateAdapterApollo(ctx)
+			adapter, err := gcfg_apollo.CreateAdapterApollo(ctx, cmd.GetCommonArguments(ctx, parser, cmd.ApolloIP).String())
 			if err != nil {
 				panic(err)
 			}
@@ -52,7 +53,7 @@ var HttpCmd = &gcmd.Command{
 		}
 
 		//获取端口
-		address := g.Cfg().MustGet(ctx, "server.address").String()
+		address := cmd.GetCommonArguments(ctx, parser, cmd.Port).String()
 		if !strings.Contains(address, ":") {
 			panic(fmt.Errorf("配置server.address格式错误: %s", address))
 		}

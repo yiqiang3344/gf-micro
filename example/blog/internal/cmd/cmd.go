@@ -21,6 +21,7 @@ var (
 			Usage:       "./main",
 			Brief:       "博客服务管理工具",
 			Description: `功能包括：微服务启动(默认)，消费者启动，xxljob定时任务等`,
+			Arguments:   append(cmd.CommonArguments, []gcmd.Argument{}...),
 			Func: cmd.GetGrpcCmdFunc(
 				cmd.GetGrpcMiddleware(),
 				func(server *grpcx.GrpcServer) {

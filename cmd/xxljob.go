@@ -37,7 +37,7 @@ func GetXxljobCmdFunc(middleware MiddlewareForCmd, taskMap map[string]xxl.TaskFu
 		//注册任务handler
 		for k, v := range taskMap {
 			exec.RegTask(k, func(cxt context.Context, param *xxl.RunReq) string {
-				shutdown := middleware(ctx)
+				shutdown := middleware(ctx, parser)
 				defer shutdown()
 
 				//生成链路主span

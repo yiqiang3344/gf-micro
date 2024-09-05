@@ -64,7 +64,7 @@ require (
 	github.com/xuri/excelize/v2 v2.8.1 // indirect
 	github.com/xuri/nfp v0.0.0-20230919160717-d98342af3f05 // indirect
 	github.com/xxl-job/xxl-job-executor-go v1.2.0 // indirect
-	github.com/yiqiang3344/gcfg-apollo v1.1.0 // indirect
+	github.com/yiqiang3344/gcfg-apollo v1.1.1 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.7 // indirect
 	go.etcd.io/etcd/client/pkg/v3 v3.5.7 // indirect
 	go.etcd.io/etcd/client/v3 v3.5.7 // indirect

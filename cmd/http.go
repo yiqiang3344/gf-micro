@@ -39,10 +39,11 @@ type ServerGroup struct {
 //	}
 func GetHttpCmdFunc(middleware MiddlewareForCmd, useMiddlewares []ghttp.HandlerFunc, serverGroups []ServerGroup) func(ctx context.Context, parser *gcmd.Parser) error {
 	return func(ctx context.Context, parser *gcmd.Parser) (err error) {
-		shutdown := middleware(ctx)
+		shutdown := middleware(ctx, parser)
 		defer shutdown()
 
 		s := g.Server(g.Cfg().MustGet(ctx, cfg.APPNAME).String())
+		s.SetAddr(GetCommonArguments(ctx, parser, Port).String())
 		middlewares := append([]ghttp.HandlerFunc{
 			logging.HttpLogFormatJsonMiddleware,
 			logging.HttpAccessLogMiddleware,

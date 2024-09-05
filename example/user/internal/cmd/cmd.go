@@ -17,9 +17,10 @@ var (
 	// Main is the main command.
 	Main = cmd.GenMain(
 		gcmd.Command{
-			Name:  "main",
-			Usage: "main",
-			Brief: "start user grpc server",
+			Name:      "main",
+			Usage:     "main",
+			Brief:     "start user grpc server",
+			Arguments: append(cmd.CommonArguments, []gcmd.Argument{}...),
 			Func: cmd.GetGrpcCmdFunc(
 				cmd.GetGrpcMiddleware(),
 				func(server *grpcx.GrpcServer) {
@@ -28,9 +29,10 @@ var (
 			),
 		},
 		&gcmd.Command{
-			Name:  "http",
-			Usage: "./main http",
-			Brief: "start user http server",
+			Name:      "http",
+			Usage:     "./main http",
+			Brief:     "start user http server",
+			Arguments: append(cmd.CommonArguments, []gcmd.Argument{}...),
 			Func: cmd.GetHttpCmdFunc(
 				cmd.GetHttpMiddleware(),
 				[]ghttp.HandlerFunc{},

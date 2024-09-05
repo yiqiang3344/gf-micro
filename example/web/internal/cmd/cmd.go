@@ -3,7 +3,6 @@ package cmd
 import (
 	_ "github.com/gogf/gf/contrib/drivers/mysql/v2"
 	_ "github.com/gogf/gf/contrib/nosql/redis/v2"
-	"github.com/yiqiang3344/gf-micro/cfg"
 	"github.com/yiqiang3344/gf-micro/flowColor"
 	"github.com/yiqiang3344/gf-micro/testWithExcel"
 	_ "web/internal/logic"
@@ -37,9 +36,10 @@ var (
 	cookieExpire = 24 * time.Hour
 	Main         = cmd.GenMain(
 		gcmd.Command{
-			Name:  "main",
-			Usage: "main",
-			Brief: "start http server",
+			Name:      "main",
+			Usage:     "main",
+			Brief:     "start http server",
+			Arguments: append(cmd.CommonArguments, []gcmd.Argument{}...),
 			Func: cmd.GetHttpCmdFunc(
 				cmd.GetHttpMiddleware(),
 				[]ghttp.HandlerFunc{},
@@ -66,6 +66,6 @@ var (
 			),
 		},
 		testWithExcel.HttpCmd,
-		cfg.CheckCmd,
+		cmd.CheckCfgCmd,
 	)
 )

@@ -12,7 +12,7 @@ require (
 	github.com/golang/protobuf v1.5.3
 	github.com/xuri/excelize/v2 v2.8.1
 	github.com/xxl-job/xxl-job-executor-go v1.2.0
-	github.com/yiqiang3344/gcfg-apollo v1.1.0
+	github.com/yiqiang3344/gcfg-apollo v1.1.1
 	google.golang.org/grpc v1.60.1
 )
 
