@@ -8,6 +8,7 @@ import (
 	_ "github.com/gogf/gf/contrib/nosql/redis/v2"
 	"github.com/gogf/gf/contrib/rpc/grpcx/v2"
 	"github.com/gogf/gf/v2/container/gmap"
+	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/util/gconv"
 	logging2 "github.com/yiqiang3344/gf-micro/logging"
 	"github.com/yiqiang3344/gf-micro/testWithExcel"
@@ -30,7 +31,7 @@ func init() {
 	ctx := gctx.GetInitCtx()
 
 	//初始化grpc全局中间件
-	cmd.GetGrpcMiddleware()(ctx)
+	cmd.GetGrpcMiddleware()(ctx, &gcmd.Parser{})
 
 	// 客户端初始化
 	blogClient = v1.NewBlogClient(grpcx.Client.MustNewGrpcClientConn("blog", grpcx.Client.ChainUnary(

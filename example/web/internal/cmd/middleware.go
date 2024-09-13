@@ -1,39 +1,43 @@
-package response
+package cmd
 
 import (
-	"github.com/gogf/gf/v2/text/gstr"
-	"net/http"
-	"reflect"
-
 	"github.com/gogf/gf/v2/errors/gcode"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/yiqiang3344/gf-micro/response"
+	"github.com/yiqiang3344/gf-micro/utility"
+	"net/http"
+	"reflect"
 )
 
-// DefaultHandlerResponse is the default implementation of HandlerResponse.
-type DefaultHandlerResponse struct {
-	Code    int         `json:"code"    dc:"Error code"`
-	Message string      `json:"message" dc:"Error message"`
-	Data    interface{} `json:"data"    dc:"Result data for certain request according API definition"`
+var notShowMsgCode = []gcode.Code{
+	gcode.CodeInternalError,
+	gcode.CodeDbOperationError,
+	gcode.CodeInvalidOperation,
+	gcode.CodeInvalidConfiguration,
+	gcode.CodeMissingConfiguration,
+	gcode.CodeNotImplemented,
+	gcode.CodeOperationFailed,
+	gcode.CodeSecurityReason,
+	gcode.CodeServerBusy,
+	gcode.CodeNecessaryPackageNotImport,
+	gcode.CodeInternalPanic,
 }
 
-var WhiteList = []string{
-	"/api.json",
-	"/health",
-}
-
+// HttpResponseMiddleware 部分业务状态码不显示错误信息
 func HttpResponseMiddleware(r *ghttp.Request) {
 	r.Middleware.Next()
 
-	if gstr.InArray(WhiteList, r.URL.Path) {
+	if gstr.InArray(response.WhiteList, r.URL.Path) {
 		return
 	}
 
 	// There's custom buffer content, it then exits current handler.
 	if r.Response.BufferLength() > 0 {
 		r.Response.ClearBuffer()
-		r.Response.WriteJson(DefaultHandlerResponse{
+		r.Response.WriteJson(response.DefaultHandlerResponse{
 			Code:    gcode.CodeInternalError.Code(),
 			Message: gcode.CodeInternalError.Message(),
 			Data:    g.Map{},
@@ -77,13 +81,18 @@ func HttpResponseMiddleware(r *ghttp.Request) {
 		msg = "success"
 	}
 
+	//部分状态码不显示错误明细
+	if utility.InArray(notShowMsgCode, code) {
+		msg = "内部错误"
+	}
+
 	//判断res是否为nil，为nil则转改空对象
 	v := reflect.ValueOf(res)
 	if v.Kind().String() == "invalid" || v.IsNil() {
 		res = g.Map{}
 	}
 
-	r.Response.WriteJson(DefaultHandlerResponse{
+	r.Response.WriteJson(response.DefaultHandlerResponse{
 		Code:    codeTmp,
 		Message: msg,
 		Data:    res,

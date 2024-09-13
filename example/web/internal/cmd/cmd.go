@@ -63,6 +63,8 @@ var (
 						},
 					},
 				},
+				cmd.WithHttpCmdResponseMiddleware(HttpResponseMiddleware),
+				//cmd.WithHttpCmdBindHttpHealthApi(nil),
 			),
 		},
 		testWithExcel.HttpCmd,

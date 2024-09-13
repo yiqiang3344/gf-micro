@@ -10,6 +10,7 @@ import (
 	"github.com/gogf/gf/v2/container/gmap"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gclient"
+	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/gf/v2/util/gconv"
 	client2 "github.com/yiqiang3344/gf-micro/client"
@@ -34,9 +35,9 @@ func init() {
 	ctx := gctx.GetInitCtx()
 
 	//初始化grpc全局中间件
-	cmd.GetGrpcMiddleware()(ctx)
+	cmd.GetGrpcMiddleware()(ctx, &gcmd.Parser{})
 	//初始化http全局中间件
-	cmd.GetHttpMiddleware()(ctx)
+	cmd.GetHttpMiddleware()(ctx, &gcmd.Parser{})
 
 	// 客户端初始化
 	userClient = v1.NewUserClient(grpcx.Client.MustNewGrpcClientConn("user", grpcx.Client.ChainUnary(
