@@ -1,6 +1,7 @@
 package response
 
 import (
+	"fmt"
 	"github.com/gogf/gf/v2/text/gstr"
 	"net/http"
 	"reflect"
@@ -88,4 +89,57 @@ func HttpResponseMiddleware(r *ghttp.Request) {
 		Message: msg,
 		Data:    res,
 	})
+}
+
+func HttpForGrpcResponseMiddleware(r *ghttp.Request) {
+	r.Middleware.Next()
+
+	if gstr.InArray(WhiteList, r.URL.Path) {
+		return
+	}
+
+	var (
+		msg  string
+		err  = r.GetError()
+		res  = r.Response.BufferString()
+		code = gerror.Code(err)
+	)
+
+	if err != nil {
+		if code == gcode.CodeNil {
+			code = gcode.CodeInternalError
+		}
+		msg = err.Error()
+	} else {
+		if r.Response.Status > 0 && r.Response.Status != http.StatusOK {
+			msg = http.StatusText(r.Response.Status)
+			switch r.Response.Status {
+			case http.StatusNotFound:
+				code = gcode.CodeNotFound
+			case http.StatusForbidden:
+				code = gcode.CodeNotAuthorized
+			default:
+				code = gcode.CodeUnknown
+			}
+			// It creates error as it can be retrieved by other middlewares.
+			err = gerror.NewCode(code, msg)
+			r.SetError(err)
+		} else {
+			code = gcode.CodeOK
+		}
+	}
+
+	//转化业务状态码
+	codeTmp := code.Code()
+	if code.Code() == 0 {
+		msg = "success"
+	}
+
+	//判断res是否为空，为空则转改空对象
+	if res == "" {
+		res = "{}"
+	}
+
+	r.Response.ClearBuffer()
+	r.Response.WriteJson(fmt.Sprintf(`{"code":%d,"message":"%s","data":%s}`, codeTmp, msg, res))
 }

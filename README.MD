@@ -25,6 +25,7 @@
 - [consume.go](cmd%2Fconsume.go) 消费者服务，规范了消息队列消费者初始化方式，并打通了链路追踪。
 - [xxljob.go](cmd%2Fxxljob.go) xxljob服务，规范了定时任务初始化方式，并打通了链路追踪。
 - [checkCfgCmd.go](cmd%2FcheckCfgCmd.go) 配置检查命令封装。
+- [httpForGrpc.go](cmd%2FhttpForGrpc.go) 生成grpc对应的http服务的控制器和cmd文件。
 
 ## 日志
 
