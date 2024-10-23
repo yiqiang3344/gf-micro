@@ -6,9 +6,11 @@ import (
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/net/gclient"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/os/gtime"
 	"github.com/gogf/gf/v2/text/gstr"
+	"github.com/yiqiang3344/gf-micro/cfg"
 	"github.com/yiqiang3344/gf-micro/response"
 	"io"
 	"net/http"
@@ -36,9 +38,13 @@ func HttpAccessLogMiddleware(r *ghttp.Request) {
 	}
 
 	res = r.Response.BufferString()
-	if j, err := gjson.DecodeToJson(r.Response.BufferString()); err == nil {
+	if j, err := gjson.DecodeToJson(res); err == nil {
 		rTmp := new(response.DefaultHandlerResponse)
 		if err = j.Scan(rTmp); err == nil {
+			accessLogLimit := gcfg.Instance().MustGet(r.GetCtx(), cfg.ACCESSLOGLENGTHLIMIT, 0).Int()
+			if accessLogLimit > 0 && len(j.MustToJsonString()) > accessLogLimit {
+				rTmp.Data = "data too long, ignore."
+			}
 			res = rTmp
 		}
 	}

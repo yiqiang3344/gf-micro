@@ -87,6 +87,7 @@ logger:
     rotateCheckInterval: "1h"
 
 jsonFormatLogs: "access,biz,webclient"  # 需要json格式的日志，日志配置中file中.分割前的部分
+accessLogLengthLimit: 1000 # access日志数据长度限制，默认0，标识不限制
 
 # 链路追踪
 otlp:
