@@ -27,9 +27,7 @@ var (
 				logging.HttpErrorLogMiddleware,
 				response.HttpForGrpcResponseMiddleware,
 			)
-
 			s.BindObject("/{.struct}/{.method}", new(controller.User))
-
 			s.Run()
 			return
 		},

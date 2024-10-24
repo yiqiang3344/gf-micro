@@ -22,9 +22,9 @@ var (
 		Brief: "gen http for grpc cmd and controller",
 		Arguments: append(CommonArguments, []gcmd.Argument{
 			{
-				Name:   "source",
+				Name:   "sources",
 				Short:  "s",
-				Brief:  "grpc的控制器文件路径，可以是基于根目录的相对路径，或绝对路径",
+				Brief:  "grpc的控制器文件路径，多个文件逗号分割，可以是基于根目录的相对路径，或绝对路径",
 				IsArg:  false,
 				Orphan: false,
 			},
@@ -44,7 +44,7 @@ var (
 			},
 		}...),
 		Func: func(ctx context.Context, parser *gcmd.Parser) (err error) {
-			controllerPath := parser.GetOpt("source", "").String()
+			controllerPath := parser.GetOpt("sources", "").String()
 			folderPath := parser.GetOpt("output", "internal/controller/http/").String()
 			cmdFolderPath := parser.GetOpt("cmd", "internal/cmd/").String()
 
@@ -52,10 +52,15 @@ var (
 				return fmt.Errorf("output is empty")
 			}
 
-			//生成controller
-			controllers, err := GenHttpForGrpcControllers(controllerPath, folderPath)
-			if err != nil {
-				return
+			var controllers []*GrpcController
+			for _, v := range strings.Split(controllerPath, ",") {
+				//生成controller
+				ret, err1 := GenHttpForGrpcControllers(v, folderPath)
+				if err1 != nil {
+					err = err1
+					return
+				}
+				controllers = append(controllers, ret...)
 			}
 			//生成cmd
 			err = GenHttpForGrpcCmd(controllers, cmdFolderPath)
@@ -104,9 +109,7 @@ var (
 	}
 )
 `
-	httpForGrpcCmdBindTemp = `
-s.BindObject("/{.struct}/{.method}", new({controllerName}))
-`
+	httpForGrpcCmdBindTemp = `s.BindObject("/{.struct}/{.method}", new({controllerName}))`
 )
 
 type GrpcController struct {
